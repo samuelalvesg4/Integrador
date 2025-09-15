@@ -1,0 +1,6 @@
+# Ignora arquivos de ambiente do back-end
+/backend/.env
+
+# Ignora dependências instaladas
+/backend/node_modules
+/frontend/node_modules
