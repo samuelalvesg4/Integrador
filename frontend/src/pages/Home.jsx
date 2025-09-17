@@ -28,7 +28,7 @@ const Home = () => {
 
   return (
     <>
-      <Header />
+      <Header /><br/>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-6">
         {loading ? (
           <p>Carregando produtos...</p>
