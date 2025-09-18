@@ -35,7 +35,7 @@ router.post('/upload', authenticateToken, upload.array('images', 6), async (req,
 });
 
 // Rota para criar um novo produto (sem o upload direto da imagem)
-router.post('/products', authenticateToken, async (req, res) => {
+router.post('/products', authenticateToken, upload.array('images', 6), async (req, res) => {
     try {
         if (req.user.role !== 'seller') {
             return res.status(403).json({ error: 'Somente vendedores podem cadastrar produtos' });
@@ -45,7 +45,7 @@ router.post('/products', authenticateToken, async (req, res) => {
         if (!name || !description || !price || !stock) {
             return res.status(400).json({ error: 'Todos os campos obrigatórios precisam ser preenchidos.' });
         }
-        
+
         const seller = await prisma.seller.findUnique({ where: { userId: req.user.id }});
         if (!seller) {
             return res.status(400).json({ error: 'Vendedor não encontrado.' });
@@ -57,17 +57,13 @@ router.post('/products', authenticateToken, async (req, res) => {
                 description,
                 priceCents: price,
                 stock: parseInt(stock, 10),
-                sellerId: seller.id
-            }
+                sellerId: seller.id,
+                images: images ? { create: images.map(url => ({ url })) } : undefined,
+            },
+            include: { images: true }
         });
 
-        if (images && images.length > 0) {
-            const imagesData = images.map(url => ({ url, productId: product.id }));
-            await prisma.productImage.createMany({ data: imagesData });
-        }
-        
-        const prodFull = await prisma.product.findUnique({ where: { id: product.id }, include: { images: true }});
-        res.status(201).json(prodFull);
+        res.status(201).json(product);
     } catch (err) {
         console.error("Erro ao cadastrar produto:", err);
         res.status(500).json({ error: 'Erro ao cadastrar produto: ' + err.message });
