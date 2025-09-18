@@ -1,0 +1,46 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 10px; /* Espaço entre as células */
+    width: 90%; /* Largura do grid */
+    max-width: 1200px; /* Largura máxima aumentada em 50% (exemplo de 800px para 1200px) */
+    padding: 10px;
+    background-color: transparent; /* Fundo transparente */
+    border-radius: 8px;
+    box-shadow: none; /* Sem sombra */
+    
+    /* Centralização na página */
+    margin: 0 auto;
+}
+
+.grid-item {
+    background-color: transparent; /* Fundo transparente */
+    color: black; /* Cor do texto para ser visível em qualquer fundo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2em;
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Estilo para quando não houver produtos */
+.no-products {
+    grid-column: 1 / -1; /* Ocupa a largura total */
+}
+
+
+/* Media queries para responsividade */
+@media (max-width: 768px) {
+    .grid-container {
+        grid-template-columns: repeat(3, 1fr); /* 3 colunas em telas médias */
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas pequenas */
+    }
+}
