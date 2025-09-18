@@ -1,53 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
+import { useCart } from '../context/CartContext'; 
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState([]);
+  const { cartItems, updateItemQuantity, removeItemFromCart } = useCart();
   const [cep, setCep] = useState("");
   const [frete, setFrete] = useState(0);
   const [endereco, setEndereco] = useState(null);
   const navigate = useNavigate();
 
-  // Carregar carrinho do localStorage
-  const loadCart = () => {
-    const storedCart = localStorage.getItem("cart");
-    if (storedCart) setCartItems(JSON.parse(storedCart));
-    else setCartItems([]);
-  };
-
-  useEffect(() => {
-    loadCart();
-    const handleCartChange = () => loadCart();
-    window.addEventListener("cartChanged", handleCartChange);
-    return () => window.removeEventListener("cartChanged", handleCartChange);
-  }, []);
-
-  // Ajustar quantidade do item
-  const updateQuantity = (index, delta) => {
-    const updatedCart = [...cartItems];
-    updatedCart[index].quantity = Math.max(1, updatedCart[index].quantity + delta);
-    setCartItems(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event("cartChanged"));
-  };
-
-  const removeItem = (index) => {
-    const updatedCart = [...cartItems];
-    updatedCart.splice(index, 1);
-    setCartItems(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-    window.dispatchEvent(new Event("cartChanged"));
-  };
+  // The state management is now handled by the context, so we remove the localStorage logic
+  // and the useEffect that listens for "cartChanged" event.
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-  // Calcular frete via CEP
+  // Calculate shipping via CEP
   const calcularFrete = async () => {
     if (!cep) return alert("Informe o CEP");
 
     try {
-      // Consulta ViaCEP
+      // ViaCEP query
       const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await res.json();
 
@@ -58,7 +31,7 @@ export default function Cart() {
 
       setEndereco(data);
 
-      // Exemplo de cálculo de frete simples por estado
+      // Simple example of shipping cost per state
       let valorFrete = 0;
       switch (data.uf) {
         case "SP":
@@ -81,7 +54,7 @@ export default function Cart() {
     }
   };
 
-  // Finalizar compra
+  // Finalize purchase
   const finalizarCompra = () => {
     if (cartItems.length === 0) return alert("Carrinho vazio");
     if (!cep || !endereco) return alert("Informe um CEP válido");
@@ -95,7 +68,7 @@ export default function Cart() {
     };
 
     localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
-    navigate("/checkout"); // redireciona para página de endereço/pagamento
+    navigate("/checkout"); // Redirect to the address/payment page
   };
 
   return (
@@ -109,21 +82,21 @@ export default function Cart() {
           <p>O carrinho está vazio.</p>
         ) : (
           <div className="space-y-4">
-            {cartItems.map((item, index) => (
+            {cartItems.map((item) => (
               <div
-                key={index}
+                key={item.id}
                 className="flex items-center justify-between bg-white p-4 rounded shadow"
               >
                 <div className="flex items-center space-x-4">
                   <button
-                    onClick={() => updateQuantity(index, -1)}
+                    onClick={() => updateItemQuantity(item.id, -1)}
                     className="bg-gray-300 px-2 py-1 rounded hover:bg-gray-400"
                   >
                     -
                   </button>
                   <span className="w-6 text-center">{item.quantity}</span>
                   <button
-                    onClick={() => updateQuantity(index, 1)}
+                    onClick={() => updateItemQuantity(item.id, 1)}
                     className="bg-gray-300 px-2 py-1 rounded hover:bg-gray-400"
                   >
                     +
@@ -135,7 +108,7 @@ export default function Cart() {
                 <div className="flex items-center space-x-4">
                   <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
                   <button
-                    onClick={() => removeItem(index)}
+                    onClick={() => removeItemFromCart(item.id)}
                     className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
                   >
                     Remover
