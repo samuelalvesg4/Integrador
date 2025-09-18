@@ -11,9 +11,10 @@ import productsRoutes from './routes/products.js'; // Importe as rotas de produt
 import sellerRoutes from './routes/sellers.js';
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configura o Cloudinary com a sua URL do .env
+// Configura o Cloudinary com a URL do seu .env
 cloudinary.config({
-    secure: true
+  secure: true,
+  cloudinary_url: process.env.CLOUDINARY_URL
 });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,6 @@ app.use(cors());
 app.use(express.json());
 
 // Servir arquivos estáticos da pasta 'uploads'
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', productsRoutes); // Conecte a rota de produtos
 
 // Conecta routers ao app
