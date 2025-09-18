@@ -1,7 +1,8 @@
 import { useState } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
-import { useCart } from '../context/CartContext'; 
+import { useCart } from '../context/CartContext';
+import '../components/cart.css';
 
 export default function Cart() {
   const { cartItems, updateItemQuantity, removeItemFromCart } = useCart();
@@ -77,80 +78,102 @@ export default function Cart() {
 
       <main className="p-6">
         <h1 className="text-2xl font-bold mb-6">Meu Carrinho</h1>
-
+        
         {cartItems.length === 0 ? (
           <p>O carrinho está vazio.</p>
         ) : (
-          <div className="space-y-4">
-            {cartItems.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between bg-white p-4 rounded shadow"
-              >
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => updateItemQuantity(item.id, -1)}
-                    className="bg-gray-300 px-2 py-1 rounded hover:bg-gray-400"
-                  >
-                    -
-                  </button>
-                  <span className="w-6 text-center">{item.quantity}</span>
-                  <button
-                    onClick={() => updateItemQuantity(item.id, 1)}
-                    className="bg-gray-300 px-2 py-1 rounded hover:bg-gray-400"
-                  >
-                    +
-                  </button>
+          <div className="cart-wrapper">
+            {/* Cabeçalho da tabela */}
+            <div className="cart-grid cart-header">
+                <div>Produtos</div>
+                <div>Preço Unitário</div>
+                <div>Quantidade</div>
+                <div>Preço Total</div>
+                <div>Ações</div>
+            </div>
 
-                  <span className="ml-4">{item.name}</span>
+            {/* Itens do carrinho */}
+            {cartItems.map((item, index) => (
+              <div key={item.id} className="cart-grid cart-item">
+                {/* Produto */}
+                <div className="product-info">
+                    {/* Imagem do produto */}
+                    {item.images && item.images.length > 0 ? (
+                        <img src={item.images[0].url} alt={item.name} />
+                    ) : (
+                        <div className="bg-gray-200 w-20 h-20 flex items-center justify-center text-gray-500 rounded">
+                            Sem Imagem
+                        </div>
+                    )}
+                    <span>{item.name}</span>
+                </div>
+                
+                {/* Preço Unitário */}
+                <span>R$ {item.price.toFixed(2)}</span>
+
+                {/* Quantidade */}
+                <div className="quantity-controls">
+                  <button onClick={() => updateItemQuantity(item.id, -1)}>-</button>
+                  <span>{item.quantity}</span>
+                  <button onClick={() => updateItemQuantity(item.id, 1)}>+</button>
                 </div>
 
-                <div className="flex items-center space-x-4">
-                  <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
-                  <button
-                    onClick={() => removeItemFromCart(item.id)}
-                    className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
-                  >
-                    Remover
-                  </button>
-                </div>
+                {/* Preço Total por item */}
+                <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
+
+                {/* Botão de Ações */}
+                <button
+                  onClick={() => removeItemFromCart(item.id)}
+                  className="remove-button"
+                >
+                  Remover
+                </button>
               </div>
             ))}
 
-            <div className="flex justify-end font-bold text-lg">
-              Subtotal: R$ {subtotal.toFixed(2)}
-            </div>
-
-            <div className="flex items-center space-x-2 mt-4">
-              <input
-                type="text"
-                placeholder="CEP para calcular frete"
-                value={cep}
-                onChange={(e) => setCep(e.target.value)}
-                className="border p-2 rounded"
-              />
-              <button
-                onClick={calcularFrete}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Calcular Frete
-              </button>
-              {frete > 0 && <span>Frete: R$ {frete.toFixed(2)}</span>}
-            </div>
-
-            {frete > 0 && (
-              <div className="flex justify-end font-bold text-lg mt-2">
-                Total: R$ {(subtotal + frete).toFixed(2)}
-              </div>
-            )}
-
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={finalizarCompra}
-                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
-              >
-                Finalizar Compra
-              </button>
+            {/* Seção de Resumo (Subtotal e Frete) */}
+            <div className="summary-container">
+                <div className="summary-row">
+                    <span>Subtotal:</span>
+                    <span>R$ {subtotal.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex items-center space-x-2 mt-4">
+                    <input
+                        type="text"
+                        placeholder="CEP"
+                        value={cep}
+                        onChange={(e) => setCep(e.target.value)}
+                        className="border p-2 rounded w-full"
+                    />
+                    <button
+                        onClick={calcularFrete}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                        Calcular Frete
+                    </button>
+                </div>
+                
+                {frete > 0 && (
+                    <div className="summary-row mt-2">
+                        <span>Frete:</span>
+                        <span>R$ {frete.toFixed(2)}</span>
+                    </div>
+                )}
+                
+                <div className="summary-row summary-total">
+                    <span>Total:</span>
+                    <span>R$ {(subtotal + frete).toFixed(2)}</span>
+                </div>
+                
+                <div className="mt-4 text-center">
+                    <button
+                        onClick={finalizarCompra}
+                        className="bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 w-full"
+                    >
+                        Finalizar Compra
+                    </button>
+                </div>
             </div>
           </div>
         )}
