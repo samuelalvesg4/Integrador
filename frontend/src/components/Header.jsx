@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ShoppingCart } from "lucide-react";
+import { useCart } from '../context/CartContext'; // Importe o hook do carrinho
 
 export default function Header() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const { cartItems } = useCart(); // Use o hook para acessar o estado do carrinho
 
   // Carrega usuário do localStorage
   const loadUser = () => {
@@ -33,6 +36,9 @@ export default function Header() {
     setUser(null);
     navigate("/login");
   };
+
+  // Calcula a quantidade total de itens no carrinho
+  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <header className="bg-white shadow-md p-4 flex justify-between items-center">
@@ -71,7 +77,21 @@ export default function Header() {
               </>
             )}
 
-            {/* Botões para clientes */}
+            {/* Ícone do Carrinho */}
+            <button 
+              className="relative"
+              onClick={() => navigate("/cart")}
+            >
+              <ShoppingCart className="w-6 h-3 text-gray-800" />
+              {/* Badge de quantidade */}
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-xs text-white rounded-full px-1">
+                  {totalItems}
+                </span>
+              )}
+            </button>&nbsp;
+            
+            {/* Botão de Checkout para clientes */}
             {user.role !== "seller" && (
               <button
                 onClick={() => navigate("/checkout")}
