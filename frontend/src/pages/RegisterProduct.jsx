@@ -1,10 +1,14 @@
-// Exemplo de um componente de cadastro de produto (RegisterProduct.jsx)
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from "../components/Header";
 import { registerProduct, uploadImages } from '../services/api';
+import useAuth from '../hooks/useAuth';
+import imageCompression from 'browser-image-compression';
 
 const RegisterProduct = () => {
+    // Garante que o usuário logado é um vendedor
+    useAuth({ role: 'seller' });
+
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
@@ -13,8 +17,25 @@ const RegisterProduct = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleFileChange = (e) => {
-        setSelectedFiles(Array.from(e.target.files));
+    const handleFileChange = async (e) => {
+        const files = Array.from(e.target.files);
+        const compressedFiles = [];
+
+        for (const file of files) {
+            const options = {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1920,
+                useWebWorker: true,
+            };
+
+            try {
+                const compressedFile = await imageCompression(file, options);
+                compressedFiles.push(compressedFile);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        setSelectedFiles(compressedFiles);
     };
 
     const handleSubmit = async (e) => {
@@ -22,49 +43,98 @@ const RegisterProduct = () => {
         setLoading(true);
 
         try {
-            let imageUrls = [];
-
-            // Etapa 1: Fazer o upload das imagens
-            if (selectedFiles.length > 0) {
-                const uploadResponse = await uploadImages(selectedFiles);
-                imageUrls = uploadResponse.imageUrls; // O backend retorna um array de URLs
+            // VERIFICAÇÃO ADICIONAL: Garante que o token existe antes de fazer a chamada à API
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // Se o token não existir, exibe um erro e impede o envio
+                alert('Sessão expirada. Por favor, faça login novamente.');
+                navigate('/login');
+                setLoading(false);
+                return;
             }
 
-            // Etapa 2: Registrar o produto com os dados e as URLs
+            let imageUrls = [];
+
+            if (selectedFiles.length > 0) {
+                const uploadResponse = await uploadImages(selectedFiles);
+                imageUrls = uploadResponse.imageUrls;
+            }
+
             const productData = {
                 name,
                 description,
-                price: parseFloat(price) * 100, // Converte para centavos
+                price: parseFloat(price) * 100,
                 stock: parseInt(stock, 10),
-                images: imageUrls, // Envia as URLs recebidas para a API
+                images: imageUrls,
             };
 
             await registerProduct(productData);
             alert("Produto cadastrado com sucesso!");
-            navigate('/MyProducts'); // Redireciona para a página de produtos do vendedor
+            navigate('/MyProducts');
 
         } catch (error) {
             console.error("Erro ao cadastrar produto:", error);
-            alert(`Erro ao cadastrar produto: ${error.message}`);
+            alert(`Erro ao cadastrar produto: ${error.body?.error || error.message}`);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-      <div className="min-h-screen bg-gray-100">
-      <Header />
-        <form onSubmit={handleSubmit}>
-            <h2>Cadastrar Novo Produto</h2>
-            <input type="text" placeholder="Nome do Produto" value={name} onChange={(e) => setName(e.target.value)} required />
-            <textarea placeholder="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} required />
-            <input type="number" step="0.01" placeholder="Preço" value={price} onChange={(e) => setPrice(e.target.value)} required />
-            <input type="number" placeholder="Estoque" value={stock} onChange={(e) => setStock(e.target.value)} required />
-            <input type="file" multiple onChange={handleFileChange} />
-            <button type="submit" disabled={loading}>
-                {loading ? 'Cadastrando...' : 'Cadastrar Produto'}
-            </button>
-        </form>
+        <div className="min-h-screen bg-gray-100">
+            <Header />
+            <div className="w-full flex justify-center mt-10 px-4 sm:px-6 lg:px-8">
+                <div className="w-full max-w-lg bg-white rounded-lg shadow p-8">
+                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Cadastrar Produto</h2>
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                        <input
+                            type="text"
+                            placeholder="Nome do Produto"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            className="border p-2 rounded w-full"
+                        />
+                        <textarea
+                            placeholder="Descrição"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            required
+                            className="border p-2 rounded w-full"
+                        />
+                        <input
+                            type="number"
+                            step="0.01"
+                            placeholder="Preço (R$)"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            required
+                            className="border p-2 rounded w-full"
+                        />
+                        <input
+                            type="number"
+                            placeholder="Estoque"
+                            value={stock}
+                            onChange={(e) => setStock(e.target.value)}
+                            required
+                            className="border p-2 rounded w-full"
+                        />
+                        <input
+                            type="file"
+                            multiple
+                            onChange={handleFileChange}
+                            className="border p-2 rounded w-full"
+                        />
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-full w-full hover:bg-blue-700 transition duration-300"
+                        >
+                            {loading ? 'Cadastrando...' : 'Cadastrar Produto'}
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     );
 };
