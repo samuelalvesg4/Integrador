@@ -23,9 +23,9 @@ export default function Checkout() {
 
     // Carrega dados do carrinho
     useEffect(() => {
-        if (cartItems.length === 0) {
-            navigate('/cart');
-        }
+      if (cartItems.length === 0) {
+          navigate('/cart');
+      }
     }, [cartItems, navigate]);
 
     // Lógica para buscar o endereço via CEP
@@ -74,13 +74,13 @@ export default function Checkout() {
         console.log("Dados do Pedido:", orderData);
         alert(`Pedido finalizado com sucesso! Um e-mail de confirmação foi enviado para você.`);
         
-        // Em um sistema real, você limparia o carrinho aqui
+        // Limpa Carrinho
         clearCart();
         
         // E redirecionaria o usuário
         navigate('/');
     };
-
+    
     return (
         <div>
             <Header />
