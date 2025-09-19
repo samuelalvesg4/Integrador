@@ -65,12 +65,6 @@ export default function ProductCard({ product }) {
                         {formattedPrice}
                     </p>
                     <div className="flex justify-between items-center mt-4">
-                        <Link
-                            to={`/product/${product.id}`}
-                            className="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700 transition"
-                        >
-                            Ver Detalhes
-                        </Link>
                         <div>
                             {/* O botão "Adicionar ao Carrinho" agora usa a função addToCart do contexto */}
                             <button
