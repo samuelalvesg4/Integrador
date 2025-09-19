@@ -1,39 +1,82 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { CartProvider } from './context/CartContext';
-
-import Home from './pages/Home';
-import Product from './pages/Product';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Cart from './pages/Cart';
-import SellerDashboard from './pages/SellerDashboard';
-import CreateProduct from './pages/CreateProduct';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import Cart from "./pages/Cart";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Checkout from "./pages/Checkout";
+import ProductDetail from "./pages/ProductDetail";
+import CreateProduct from "./pages/CreateProduct";
 import RegisterProduct from "./pages/RegisterProduct";
 import MyProducts from "./pages/MyProducts";
 import Sales from "./pages/Sales";
-import Checkout from './pages/Checkout';
+import { CartProvider } from './context/CartContext';
 
-const App = () => {
+function App() {
   return (
-    <CartProvider>
-      <Router>
+    <Router>
+      <CartProvider>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/product/:id" element={<Product />} />
+          {/* Rotas públicas */}
           <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Home />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/seller/dashboard" element={<SellerDashboard />} />
-          <Route path="/seller/create-product" element={<CreateProduct />} />
-          <Route path="/RegisterProduct" element={<RegisterProduct />} />
-        <Route path="/MyProducts" element={<MyProducts />} />
-        <Route path="/Sales" element={<Sales />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
+
+          {/* Rotas protegidas para clientes */}
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Rotas protegidas apenas para Vendedores */}
+          <Route
+            path="/create-product"
+            element={
+              <ProtectedRoute role="seller">
+                <CreateProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit-product/:id"
+            element={
+              <ProtectedRoute role="seller">
+                <CreateProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/RegisterProduct"
+            element={
+              <ProtectedRoute role="seller">
+                <RegisterProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/MyProducts"
+            element={
+              <ProtectedRoute role="seller">
+                <MyProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/Sales"
+            element={
+              <ProtectedRoute role="seller">
+                <Sales />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-      </Router>
-    </CartProvider>
+      </CartProvider>
+    </Router>
   );
-};
+}
 
 export default App;
