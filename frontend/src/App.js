@@ -12,6 +12,7 @@ import CreateProduct from './pages/CreateProduct';
 import RegisterProduct from "./pages/RegisterProduct";
 import MyProducts from "./pages/MyProducts";
 import Sales from "./pages/Sales";
+import Checkout from './pages/Checkout';
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/product/:id" element={<Product />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/seller/dashboard" element={<SellerDashboard />} />
