@@ -20,39 +20,39 @@ model User {
 }
 
 model Seller {
-  id       Int       @id @default(autoincrement())
-  userId   Int       @unique
-  user     User      @relation(fields: [userId], references: [id])
-  products Product[]
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+  products  Product[]
 }
 
 model Customer {
-  id       Int       @id @default(autoincrement())
-  userId   Int       @unique
-  user     User      @relation(fields: [userId], references: [id])
-  orders   Order[]   @relation("CustomerOrders")
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+  orders    Order[]  @relation("CustomerOrders")
 }
 
 model Product {
-  id          Int            @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
   description String?
   priceCents  Int
   stock       Int?
   
   sellerId    Int
-  seller      Seller         @relation(fields: [sellerId], references: [id])
+  seller      Seller   @relation(fields: [sellerId], references: [id])
   
-  createdAt   DateTime       @default(now())
+  createdAt   DateTime @default(now())
   orderItems  OrderItem[]
   images      ProductImage[]
 }
 
 model ProductImage {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   productId Int
   url       String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade) // CORRIGIDO: Adicionado onDelete
 }
 
 model Order {
@@ -75,7 +75,7 @@ model OrderItem {
   quantity  Int
   unitCents Int
   
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade) // CORRIGIDO: Adicionado onDelete
   order     Order   @relation(fields: [orderId], references: [id])
 }
 

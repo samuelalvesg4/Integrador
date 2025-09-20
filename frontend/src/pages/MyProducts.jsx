@@ -1,38 +1,30 @@
-// frontend/pages/MyProducts.jsx
-
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { getSellerProducts, deleteProduct } from "../services/api";
 import useAuth from "../hooks/useAuth";
+import CreateProduct from "./CreateProduct";
+import '../components/my-products.css';
 
 export default function MyProducts() {
   useAuth();
-  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingProduct, setEditingProduct] = useState(null);
+  
+  const fetchProducts = async () => {
+    try {
+      const data = await getSellerProducts();
+      setProducts(data);
+    } catch (err) {
+      console.error(err);
+      alert(err?.body?.message || "Erro de conexão com o servidor.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await getSellerProducts();
-        setProducts(data);
-      } catch (err) {
-        console.error(err);
-        alert(err?.body?.message || "Erro de conexão com o servidor.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const productsUpdated = localStorage.getItem("productsUpdated");
-    if (productsUpdated) {
-      setLoading(true);
-      fetchProducts();
-      localStorage.removeItem("productsUpdated");
-    } else {
-      fetchProducts();
-    }
+    fetchProducts();
   }, []);
 
   const handleDelete = async (productId) => {
@@ -47,18 +39,24 @@ export default function MyProducts() {
     }
   };
   
-  const handleEdit = (productId) => {
-    navigate(`/edit-product/${productId}`);
+  const handleEdit = (product) => {
+    setEditingProduct(product);
+  };
+
+  const handleCloseModal = () => {
+    setEditingProduct(null);
+    fetchProducts();
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
 
-      {/* Container interno independente do Header */}
       <div className="w-full flex justify-center mt-10 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-7xl bg-white rounded-lg shadow p-6">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Meus Produtos</h2>
+        {/* Usando a nova classe CSS */}
+        <div className="my-products-wrapper">
+          {/* Título */}
+          <h2 className="text-3xl font-bold mb-6 text-gray-800">Painel do Vendedor</h2>
 
           {loading ? (
             <p className="text-center text-gray-600">Carregando...</p>
@@ -68,33 +66,32 @@ export default function MyProducts() {
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full w-full text-sm text-left text-gray-500 border border-gray-200 border-collapse">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+              {/* Usando as novas classes CSS */}
+              <table className="products-table">
+                <thead className="products-table-header">
                   <tr>
-                    <th className="py-3 px-4 sm:px-6 border border-gray-200">Nome</th>
-                    <th className="py-3 px-4 sm:px-6 border border-gray-200">Preço</th>
-                    <th className="py-3 px-4 sm:px-6 border border-gray-200">Estoque</th>
-                    <th className="py-3 px-4 sm:px-6 border border-gray-200 text-center">Ações</th>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Estoque</th>
+                    <th className="text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {products.map((p) => (
-                    <tr key={p.id} className="bg-white hover:bg-gray-50">
-                      <td className="py-4 px-4 sm:px-6 border border-gray-200 font-medium text-gray-900">{p.name}</td>
-                      <td className="py-4 px-4 sm:px-6 border border-gray-200">R$ {(p.priceCents / 100).toFixed(2)}</td>
-                      <td className="py-4 px-4 sm:px-6 border border-gray-200">{p.stock}</td>
-                      <td className="py-4 px-4 sm:px-6 border border-gray-200 text-center flex justify-center gap-4">
-                        {/* Botão de Editar */}
+                    <tr key={p.id} className="products-table-row">
+                      <td>{p.name}</td>
+                      <td>R$ {(p.priceCents / 100).toFixed(2)}</td>
+                      <td>{p.stock}</td>
+                      <td className="action-buttons-container">
                         <button
-                          onClick={() => handleEdit(p.id)}
-                          className="font-medium text-blue-600 hover:underline"
-                        >
-                          Editar
-                        </button>
-                        {/* Botão de Deletar */}
+                          onClick={() => handleEdit(p)}
+                          className="edit-button"
+                        >
+                          Editar
+                        </button>
                         <button
                           onClick={() => handleDelete(p.id)}
-                          className="font-medium text-red-600 hover:underline"
+                          className="delete-button"
                         >
                           Deletar
                         </button>
@@ -107,6 +104,28 @@ export default function MyProducts() {
           )}
         </div>
       </div>
+      
+      {editingProduct && (
+        <Modal onClose={handleCloseModal}>
+          <CreateProduct productToEdit={editingProduct} onClose={handleCloseModal} />
+        </Modal>
+      )}
     </div>
   );
 }
+
+const Modal = ({ onClose, children }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-8 relative max-h-[90vh] overflow-y-auto">
+        <button
+          className="absolute top-2 right-4 text-gray-500 hover:text-gray-800 text-2xl"
+          onClick={onClose}
+        >
+          &times;
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+};
