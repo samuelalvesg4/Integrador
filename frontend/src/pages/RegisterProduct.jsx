@@ -21,27 +21,34 @@ const RegisterProduct = () => {
         e.preventDefault();
         setLoading(true);
 
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("Você precisa estar logado para cadastrar um produto.");
+            navigate('/login');
+            setLoading(false);
+            return;
+        }
+
         try {
-            let imageUrls = [];
-
-            // Etapa 1: Fazer o upload das imagens
-            if (selectedFiles.length > 0) {
-                const uploadResponse = await uploadImages(selectedFiles);
-                imageUrls = uploadResponse.imageUrls; // O backend retorna um array de URLs
-            }
-
-            // Etapa 2: Registrar o produto com os dados e as URLs
+            // Passo 1: Registra o produto no banco de dados
             const productData = {
                 name,
                 description,
-                price: parseFloat(price) * 100, // Converte para centavos
+                price: parseFloat(price) * 100,
                 stock: parseInt(stock, 10),
-                images: imageUrls, // Envia as URLs recebidas para a API
             };
 
-            await registerProduct(productData);
+            // Certifique-se de que a função registerProduct retorna o produto completo
+            const newProduct = await registerProduct(productData);
+
+            // Passo 2: Faz o upload das imagens, se houver, usando o ID do novo produto
+            if (selectedFiles.length > 0) {
+                // Passa os arquivos e o ID do novo produto
+                await uploadImages(selectedFiles, newProduct.id); 
+            }
+
             alert("Produto cadastrado com sucesso!");
-            navigate('/MyProducts'); // Redireciona para a página de produtos do vendedor
+            navigate('/MyProducts');
 
         } catch (error) {
             console.error("Erro ao cadastrar produto:", error);
@@ -52,19 +59,19 @@ const RegisterProduct = () => {
     };
 
     return (
-      <div className="min-h-screen bg-gray-100">
-      <Header />
-        <form onSubmit={handleSubmit}>
-            <h2>Cadastrar Novo Produto</h2>
-            <input type="text" placeholder="Nome do Produto" value={name} onChange={(e) => setName(e.target.value)} required />
-            <textarea placeholder="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} required />
-            <input type="number" step="0.01" placeholder="Preço" value={price} onChange={(e) => setPrice(e.target.value)} required />
-            <input type="number" placeholder="Estoque" value={stock} onChange={(e) => setStock(e.target.value)} required />
-            <input type="file" multiple onChange={handleFileChange} />
-            <button type="submit" disabled={loading}>
-                {loading ? 'Cadastrando...' : 'Cadastrar Produto'}
-            </button>
-        </form>
+        <div className="min-h-screen bg-gray-100">
+            <Header />
+            <form onSubmit={handleSubmit}>
+                <h2>Cadastrar Novo Produto</h2>
+                <input type="text" placeholder="Nome do Produto" value={name} onChange={(e) => setName(e.target.value)} required />
+                <textarea placeholder="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} required />
+                <input type="number" step="0.01" placeholder="Preço" value={price} onChange={(e) => setPrice(e.target.value)} required />
+                <input type="number" placeholder="Estoque" value={stock} onChange={(e) => setStock(e.target.value)} required />
+                <input type="file" multiple onChange={handleFileChange} />
+                <button type="submit" disabled={loading}>
+                    {loading ? 'Cadastrando...' : 'Cadastrar Produto'}
+                </button>
+            </form>
         </div>
     );
 };

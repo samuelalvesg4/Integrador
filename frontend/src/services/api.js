@@ -54,27 +54,27 @@ export async function register(name, email, password, role) {
 }
 
 export async function registerProduct(productData) {
-  return request('/products', {
-    method: 'POST',
-    body: JSON.stringify(productData),
-  });
+    // O backend precisa retornar o objeto completo do produto com o ID
+    return request('/products', {
+        method: 'POST',
+        body: JSON.stringify(productData),
+    });
 }
 
-export async function uploadImages(files) {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    throw new Error('Token não fornecido.');
-  }
-  
-  const formData = new FormData();
-  files.forEach(file => {
-    formData.append('images', file);
-  });
+export async function uploadImages(files, productId) {
+    if (!localStorage.getItem('token')) {
+        throw new Error('Token não fornecido.');
+    }
 
-  return request('/upload', {
-    method: 'POST',
-    body: formData,
-  });
+    const formData = new FormData();
+    files.forEach(file => {
+        formData.append('images', file);
+    });
+
+    return request(`/products/${productId}/images`, { // Novo endpoint com o ID
+        method: 'POST',
+        body: formData,
+    });
 }
 
 export async function editProduct(id, productData) {

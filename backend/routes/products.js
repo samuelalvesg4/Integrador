@@ -1,4 +1,3 @@
-// backend/routes/products.js
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
@@ -12,36 +11,14 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Rota para upload de imagens para o Cloudinary
-router.post('/upload', authenticateToken, upload.array('images', 6), async (req, res) => {
-    try {
-        if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
-        }
-
-        const imageUrls = [];
-        for (const file of req.files) {
-            const result = await cloudinary.uploader.upload(`data:image/jpeg;base64,${file.buffer.toString('base64')}`, {
-                folder: "uploads"
-            });
-            imageUrls.push(result.secure_url);
-        }
-
-        res.status(200).json({ imageUrls });
-    } catch (err) {
-        console.error("Erro no upload para o Cloudinary:", err);
-        res.status(500).json({ error: 'Erro ao fazer upload das imagens.' });
-    }
-});
-
-// Rota para criar um novo produto (sem o upload direto da imagem)
-router.post('/products', authenticateToken, upload.array('images', 6), async (req, res) => {
+// Rota para criar um novo produto (ajustada para não receber arquivos)
+router.post('/products', authenticateToken, async (req, res) => {
     try {
         if (req.user.role !== 'seller') {
             return res.status(403).json({ error: 'Somente vendedores podem cadastrar produtos' });
         }
         
-        const { name, description, price, stock, images } = req.body;
+        const { name, description, price, stock } = req.body;
         if (!name || !description || !price || !stock) {
             return res.status(400).json({ error: 'Todos os campos obrigatórios precisam ser preenchidos.' });
         }
@@ -58,7 +35,6 @@ router.post('/products', authenticateToken, upload.array('images', 6), async (re
                 priceCents: price,
                 stock: parseInt(stock, 10),
                 sellerId: seller.id,
-                images: images ? { create: images.map(url => ({ url })) } : undefined,
             },
             include: { images: true }
         });
@@ -67,6 +43,52 @@ router.post('/products', authenticateToken, upload.array('images', 6), async (re
     } catch (err) {
         console.error("Erro ao cadastrar produto:", err);
         res.status(500).json({ error: 'Erro ao cadastrar produto: ' + err.message });
+    }
+});
+
+// --- NOVA ROTA ADICIONADA AQUI ---
+// Rota dedicada para upload de imagens para um produto existente
+router.post('/products/:productId/images', authenticateToken, upload.array('images', 6), async (req, res) => {
+    try {
+        const { productId } = req.params;
+
+        // Converta productId para um inteiro
+        const parsedProductId = parseInt(productId);
+
+        // Verifique se o ID é um número válido e se os arquivos existem
+        if (isNaN(parsedProductId) || !req.files || req.files.length === 0) {
+            return res.status(400).json({ error: 'ID do produto inválido ou nenhum arquivo de imagem enviado.' });
+        }
+
+        const product = await prisma.product.findUnique({
+            where: { id: parsedProductId }, // Use o ID validado aqui
+            include: { seller: true }
+        });
+
+        if (!product || product.seller.userId !== req.user.id) {
+            return res.status(403).json({ error: 'Você não tem permissão para adicionar imagens a este produto.' });
+        }
+
+        const imageUrls = [];
+        for (const file of req.files) {
+            const result = await cloudinary.uploader.upload(`data:image/jpeg;base64,${file.buffer.toString('base64')}`, {
+                folder: "uploads"
+            });
+            imageUrls.push(result.secure_url);
+        }
+
+        // Conecta as URLs das imagens ao produto no banco de dados
+        await prisma.productImage.createMany({
+            data: imageUrls.map(url => ({
+                url: url,
+                productId: parseInt(productId)
+            }))
+        });
+
+        res.status(200).json({ imageUrls });
+    } catch (err) {
+        console.error("Erro ao fazer upload de imagens:", err);
+        res.status(500).json({ error: 'Erro ao fazer upload de imagens.' });
     }
 });
 
@@ -103,7 +125,7 @@ router.delete('/products/:id', authenticateToken, async (req, res) => {
 router.put('/products/:id', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, price, stock, images } = req.body;
+        const { name, description, price, stock } = req.body;
         
         const productToUpdate = await prisma.product.findUnique({
             where: { id: parseInt(id) },
@@ -145,10 +167,9 @@ router.get('/products', async (req, res) => {
             }
         });
 
-        // Mapeia cada produto para adicionar a propriedade 'price'
         const productsWithPrice = products.map(product => ({
             ...product,
-            price: product.priceCents / 100 // Converte de centavos para reais
+            price: product.priceCents / 100 
         }));
 
         res.status(200).json(productsWithPrice);

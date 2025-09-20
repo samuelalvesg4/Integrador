@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext'; // Importe o hook do carrinho
 export default function Header() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
-  const { cartItems } = useCart(); // Use o hook para acessar o estado do carrinho
+  const { cart } = useCart(); // Use o hook para acessar o estado do carrinho
 
   // Carrega usuário do localStorage
   const loadUser = () => {
@@ -38,7 +38,7 @@ export default function Header() {
   };
 
   // Calcula a quantidade total de itens no carrinho
-  const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = Array.isArray(cart) ? cart.reduce((acc, item) => acc + item.quantity, 0) : 0;
 
   return (
     <header className="bg-white shadow-md p-4 flex justify-between items-center">
