@@ -40,10 +40,16 @@ export async function request(path, options = {}) {
 }
 
 export async function login(email, password) {
-  return request('/login', {
+  const res = await request('/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
+  
+  // O backend deve retornar um JSON com `token` e `user`
+  return {
+    token: res.token,
+    user: res.user,
+  };
 }
 
 export async function register(name, email, password, role) {
@@ -85,8 +91,8 @@ export async function editProduct(id, productData) {
   }
   
 export async function deleteProduct(id) {
-      return request(`/products/${id}`, {
-          method: 'DELETE',
+    return request(`/products/${id}`, {
+      method: 'DELETE',
       });
   }
 
@@ -111,7 +117,7 @@ export async function getProductById(id) {
 }
 
 export async function finalizarCompra(orderData) {
-  return request('/checkout', {
+  return request('/orders', {
     method: 'POST',
     body: JSON.stringify(orderData),
   });

@@ -39,46 +39,48 @@ const RegisterProduct = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-        try {
-            // VERIFICAÇÃO ADICIONAL: Garante que o token existe antes de fazer a chamada à API
-            const token = localStorage.getItem('token');
-            if (!token) {
-                // Se o token não existir, exibe um erro e impede o envio
-                alert('Sessão expirada. Por favor, faça login novamente.');
-                navigate('/login');
-                setLoading(false);
-                return;
-            }
-
-            let imageUrls = [];
-
-            if (selectedFiles.length > 0) {
-                const uploadResponse = await uploadImages(selectedFiles);
-                imageUrls = uploadResponse.imageUrls;
-            }
-
-            const productData = {
-                name,
-                description,
-                price: parseFloat(price) * 100,
-                stock: parseInt(stock, 10),
-                images: imageUrls,
-            };
-
-            await registerProduct(productData);
-            alert("Produto cadastrado com sucesso!");
-            navigate('/MyProducts');
-
-        } catch (error) {
-            console.error("Erro ao cadastrar produto:", error);
-            alert(`Erro ao cadastrar produto: ${error.body?.error || error.message}`);
-        } finally {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('Sessão expirada. Por favor, faça login novamente.');
+            navigate('/login');
             setLoading(false);
+            return;
         }
-    };
+
+        // 1. Cadastrar o produto primeiro para obter o ID
+        const productData = {
+            name,
+            description,
+            price: parseFloat(price) * 100,
+            stock: parseInt(stock, 10),
+            images: [], // Começa com um array vazio de imagens
+        };
+
+        const newProduct = await registerProduct(productData);
+        const productId = newProduct.id; // Assume que o backend retorna o ID do novo produto
+
+        let imageUrls = [];
+
+        // 2. Fazer o upload das imagens usando o ID do produto recém-criado
+        if (selectedFiles.length > 0) {
+            const uploadResponse = await uploadImages(selectedFiles, productId);
+            imageUrls = uploadResponse.imageUrls; // Armazena as URLs retornadas
+        }
+
+        alert("Produto cadastrado e imagens enviadas com sucesso!");
+        navigate('/MyProducts');
+
+    } catch (error) {
+        console.error("Erro ao cadastrar produto:", error);
+        alert(`Erro ao cadastrar produto: ${error.body?.error || error.message}`);
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen bg-gray-100">

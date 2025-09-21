@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "browser-image-compression": "^2.0.2",
     "cra-template-pwa": "2.0.0",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",

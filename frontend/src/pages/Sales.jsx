@@ -5,7 +5,7 @@ import { getSellerSales } from "../services/api";
 import '../components/my-products.css';
 
 export default function Sales() {
-    useAuth();
+    useAuth({ role: 'seller' });
     const [sales, setSales] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -58,17 +58,20 @@ export default function Sales() {
                                         <th>Preço Total</th>
                                         <th>Comprador</th>
                                         <th>Data</th>
+                                        <th>Forma de Pagamento</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {sales.map((sale) => (
                                         <tr key={sale.id} className="products-table-row">
-                                            <td>{sale.product.name}</td>
-                                            <td>{sale.quantity}</td>
-                                            <td>{formatPrice(sale.unitCents)}</td>
-                                            <td>{formatPrice(sale.unitCents * sale.quantity)}</td>
-                                            <td>{sale.order.customer.user.name}</td>
-                                            <td>{new Date(sale.order.createdAt).toLocaleDateString()}</td>
+                                        {/* Usando os nomes corretos que vêm do backend */}
+                                        <td>{sale.productName}</td>
+                                        <td>{sale.quantity}</td>
+                                        <td>{formatPrice(sale.unitCents)}</td>
+                                        <td>{formatPrice(sale.unitCents * sale.quantity)}</td>
+                                        <td>{sale.clientName}</td>
+                                        <td>{new Date(sale.createdAt).toLocaleDateString()}</td>
+                                        <td>{sale.paymentMethod || '-'}</td> {/* Mostra a forma de pagamento ou um traço se for nula */}
                                         </tr>
                                     ))}
                                 </tbody>

@@ -65,6 +65,7 @@ model Order {
   totalCents Int
   status     OrderStatus @default(CART)
   createdAt  DateTime    @default(now())
+  paymentMethod String?
   items      OrderItem[]
 }
 

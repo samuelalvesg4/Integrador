@@ -1,116 +1,83 @@
-// frontend/src/services/api.js
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register"
+import Home from "./pages/Home";
+import Cart from "./pages/Cart";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Checkout from "./pages/Checkout";
+import ProductDetail from "./pages/ProductDetail";
+import CreateProduct from "./pages/CreateProduct";
+import RegisterProduct from "./pages/RegisterProduct";
+import MyProducts from "./pages/MyProducts";
+import Sales from "./pages/Sales";
+import { CartProvider } from './context/CartContext';
+function App() {
+  return (
+    <Router>
+      <CartProvider>
+        <Routes>
+          {/* Rotas públicas */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
 
-const API = process.env.REACT_APP_API || 'http://localhost:4000/api';
+          {/* Rotas protegidas para clientes */}
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            }
+          />
 
-export async function request(path, options = {}) {
-  const token = localStorage.getItem('token');
-  
-  const isFormData = options.body instanceof FormData;
-  
-  const headers = { 
-    ...(options.headers || {}) 
-  };
-
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
-  }
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const res = await fetch(`${API}${path}`, { ...options, headers });
-  
-  const text = await res.text();
-  let data;
-  try { 
-    data = text ? JSON.parse(text) : null; 
-  } catch { 
-    data = text; 
-  }
-
-  if (!res.ok) {
-    const errorBody = data || text;
-    const err = new Error(errorBody?.message || errorBody?.error || res.statusText || 'Erro na requisição');
-    err.status = res.status;
-    err.body = errorBody;
-    throw err;
-  }
-  return data;
+          {/* Rotas protegidas apenas para Vendedores */}
+          <Route
+            path="/create-product"
+            element={
+              <ProtectedRoute role="seller">
+                <CreateProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit-product/:id"
+            element={
+              <ProtectedRoute role="seller">
+                <CreateProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/RegisterProduct"
+            element={
+              <ProtectedRoute role="seller">
+                <RegisterProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/MyProducts"
+            element={
+              <ProtectedRoute role="seller">
+                <MyProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/Sales"
+            element={
+              <ProtectedRoute role="seller">
+                <Sales />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </CartProvider>
+    </Router>
+  );
 }
 
-export async function login(email, password) {
-  return request('/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-}
-
-export async function register(name, email, password, role) {
-  return request('/register', {
-    method: 'POST',
-    body: JSON.stringify({ name, email, password, role }),
-  });
-}
-
-export async function registerProduct(productData) {
-  return request('/products', {
-    method: 'POST',
-    body: JSON.stringify(productData),
-  });
-}
-
-export async function uploadImages(files) {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    throw new Error('Token não fornecido.');
-  }
-  
-  const formData = new FormData();
-  files.forEach(file => {
-    formData.append('images', file);
-  });
-
-  return request('/upload', {
-    method: 'POST',
-    body: formData,
-  });
-}
-
-export async function editProduct(id, productData) {
-    return request(`/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(productData),
-    });
-  }
-  
-export async function deleteProduct(id) {
-      return request(`/products/${id}`, {
-          method: 'DELETE',
-      });
-  }
-
-export async function getSellerProducts() {
-  return request('/my-products', {
-    method: 'GET',
-  });
-}
-
-export async function getSellerSales() {
-    return request('/seller/sales');
-  }
-
-export async function getProducts() {
-  return request('/products');
-}
-
-export async function getProductById(id) {
-  return request(`/products/${id}`);
-}
-
-export async function finalizarCompra(orderData) {
-  return request('/checkout', {
-    method: 'POST',
-    body: JSON.stringify(orderData),
-  });
-}
+export default App

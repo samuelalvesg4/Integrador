@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useCart } from '../context/CartContext';
+import { finalizarCompra } from '../services/api';
 
 export default function Checkout() {
     const navigate = useNavigate();
     const { cartItems, clearCart } = useCart();
-    
+
     // Estados do formulário
     const [cep, setCep] = useState('');
     const [logradouro, setLogradouro] = useState('');
@@ -18,14 +19,14 @@ export default function Checkout() {
     const [paymentMethod, setPaymentMethod] = useState('');
 
     const [loadingCep, setLoadingCep] = useState(false);
-    
+
     const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
     // Carrega dados do carrinho
     useEffect(() => {
-      if (cartItems.length === 0) {
-          navigate('/cart');
-      }
+        if (cartItems.length === 0) {
+            navigate('/cart');
+        }
     }, [cartItems, navigate]);
 
     // Lógica para buscar o endereço via CEP
@@ -54,33 +55,64 @@ export default function Checkout() {
     };
 
     // Lógica para simular a finalização da compra
-    const handleFinalizarCompra = (e) => {
+    const handleFinalizarCompra = async (e) => {
         e.preventDefault();
-        if (!logradouro || !numero || !paymentMethod) {
-            alert('Por favor, preencha o endereço completo e escolha uma forma de pagamento.');
-            return;
-        }
+        // if (!logradouro || !numero || !paymentMethod) {
+        //     alert('Por favor, preencha o endereço completo e escolha uma forma de pagamento.');
+        //     return;
+        // }
 
-        // --- SIMULAÇÃO DA COMPRA ---
         const orderData = {
-            items: cartItems,
-            total: subtotal,
-            endereco: {
-                cep, logradouro, numero, complemento, bairro, cidade, estado
-            },
-            metodoPagamento: paymentMethod
+            items: cartItems.map(item => ({
+            id: item.id,
+            quantity: item.quantity,
+            name: item.name
+            })),
+            totalCents: subtotal,
+            paymentMethod: paymentMethod, // <-- ADICIONE ESTA LINHA
         };
-        
-        console.log("Dados do Pedido:", orderData);
-        alert(`Pedido finalizado com sucesso! Um e-mail de confirmação foi enviado para você.`);
-        
-        // Limpa Carrinho
-        clearCart();
-        
-        // E redirecionaria o usuário
-        navigate('/');
+
+        // --- NOSSOS TESTES ---
+        console.log("1. PREPARANDO PARA ENVIAR PEDIDO...");
+        console.log("Dados que serão enviados:", orderData);
+        // ---------------------
+
+        try {
+            console.log("2. CHAMANDO a função createOrder...");
+            await finalizarCompra(orderData);
+
+            alert(`Pedido finalizado com sucesso!`);
+            clearCart();
+            navigate('/');
+
+        } catch (err) {
+            console.error("3. ERRO na chamada da API:", err);
+            alert(err.body?.message || "Não foi possível finalizar a compra.");
+        }
     };
-    
+
+    const handleTestApi = async () => {
+    console.log("--- TESTE DE API INICIADO ---");
+    try {
+      // Vamos enviar dados mínimos só para testar a conexão
+      const testData = {
+        items: [{ id: 1, quantity: 1 }], // Use um ID de produto que exista no seu DB
+        totalCents: 1000,
+      };
+      console.log("Enviando dados de teste:", testData);
+      
+      // Use o nome da sua função aqui: finalizarCompra ou createOrder
+      await finalizarCompra(testData); 
+      
+      console.log("--- TESTE DE API: SUCESSO ---");
+      alert("TESTE: A API respondeu com sucesso!");
+
+    } catch (error) {
+      console.error("--- TESTE DE API: ERRO ---", error);
+      alert("TESTE: A API respondeu com um erro. Verifique o console e a aba Rede.");
+    }
+  };
+
     return (
         <div>
             <Header />
@@ -221,6 +253,14 @@ export default function Checkout() {
                     >
                         Finalizar Compra
                     </button>
+                    {/* --- BOTÃO DE TESTE ADICIONADO AQUI --- */}
+        <button
+          onClick={handleTestApi}
+          className="bg-orange-500 text-white px-6 py-3 rounded-full w-full font-bold hover:bg-orange-600 mt-4"
+        >
+          TESTAR API DIRETAMENTE
+        </button>
+        {/* ------------------------------------ */}
                 </form>
             </main>
         </div>

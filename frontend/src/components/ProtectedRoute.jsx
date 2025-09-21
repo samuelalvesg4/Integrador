@@ -1,22 +1,40 @@
+// Exemplo de ProtectedRoute.jsx
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children, role }) {
-  const token = localStorage.getItem("token");
-  const userString = localStorage.getItem("user");
-  
-  // Se não há token, o usuário não está logado.
-  if (!token || !userString) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  const user = JSON.parse(userString);
-  
-  // Se a rota exige uma role específica e a role do usuário não corresponde, redireciona.
-  // Por exemplo: se a rota exige 'seller' e o usuário é 'client'.
-  if (role && user.role !== role) {
-    return <Navigate to="/" replace />;
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasChecked, setHasChecked] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userString = localStorage.getItem("user");
+
+    if (!token || !userString) {
+      setIsAuthenticated(false);
+    } else {
+      const user = JSON.parse(userString);
+      if (role && user.role !== role) {
+        setIsAuthenticated(false);
+      } else {
+        setIsAuthenticated(true);
+      }
+    }
+    setHasChecked(true);
+  }, [role]);
+
+  if (!hasChecked) {
+    return null; // ou um spinner de carregamento
   }
 
-  // Se o usuário está logado e tem a role correta (se aplicável), permite o acesso.
-  return children;
+  if (isAuthenticated) {
+    return children;
+  } else {
+    // Redireciona com base na verificação final
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && role && user.role !== role) {
+      return <Navigate to="/" replace />;
+    }
+    return <Navigate to="/login" replace />;
+  }
 }

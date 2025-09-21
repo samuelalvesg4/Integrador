@@ -1,67 +1,83 @@
 import { useEffect, useState } from "react";
 import { uploadImages, registerProduct, editProduct } from '../services/api';
+import imageCompression from 'browser-image-compression'; // Importa a biblioteca
 
 export default function CreateProduct({ productToEdit, onClose }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
-  const [newImages, setNewImages] = useState([]);
-  const [existingImages, setExistingImages] = useState([]);
+  const [newFiles, setNewFiles] = useState([]); // Mudado para 'newFiles' para clareza
   const [loading, setLoading] = useState(false);
   
   const isEditing = !!productToEdit;
 
   useEffect(() => {
-    if (isEditing) {
+    if (isEditing && productToEdit) {
       setName(productToEdit.name);
       setDescription(productToEdit.description);
-      setPrice((productToEdit.priceCents / 100).toFixed(2));
+      setPrice((productToEdit.price / 100).toFixed(2));
       setStock(productToEdit.stock);
-      // CORREÇÃO: Adicionada verificação de segurança antes de usar 'map'
-      setExistingImages(productToEdit.images?.map(img => img.url) || []);
+      // Você pode exibir as imagens existentes, mas a lógica de envio já está coberta
     } else {
       setName("");
       setDescription("");
       setPrice("");
       setStock("");
-      setNewImages([]);
-      setExistingImages([]);
+      setNewFiles([]);
     }
   }, [productToEdit, isEditing]);
+  
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    const compressedFiles = [];
+    for (const file of files) {
+      try {
+        const compressedFile = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+        });
+        compressedFiles.push(compressedFile);
+      } catch (error) {
+        console.error("Erro na compressão da imagem:", error);
+      }
+    }
+    setNewFiles(compressedFiles);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      let imageUrls = [];
-
-      if (newImages.length > 0) {
-        const uploadedImages = await uploadImages(newImages);
-        imageUrls = uploadedImages.imageUrls;
-      } else if (isEditing) {
-        imageUrls = existingImages;
-      }
-      
       const priceInCents = Math.round(parseFloat(price) * 100);
-      const productData = {
-        name,
-        description,
-        price: priceInCents,
-        stock: parseInt(stock, 10),
-        images: imageUrls,
-      };
+      let updatedProduct = null;
 
       if (isEditing) {
-        await editProduct(productToEdit.id, productData);
+        // LÓGICA DE EDIÇÃO
+        const updatedData = { name, description, price: priceInCents, stock: parseInt(stock, 10) };
+        updatedProduct = await editProduct(productToEdit.id, updatedData);
         alert("Produto atualizado com sucesso!");
+
+        // Se o usuário selecionou novas imagens, faz o upload
+        if (newFiles.length > 0) {
+          await uploadImages(newFiles, productToEdit.id);
+        }
+
       } else {
-        await registerProduct(productData);
+        // LÓGICA DE CADASTRO
+        const newProductData = { name, description, price: priceInCents, stock: parseInt(stock, 10), images: [] };
+        updatedProduct = await registerProduct(newProductData);
+        
+        // Se o usuário selecionou imagens no cadastro, faz o upload usando o ID do novo produto
+        if (newFiles.length > 0) {
+          await uploadImages(newFiles, updatedProduct.id);
+        }
+
         alert("Produto cadastrado com sucesso!");
       }
 
-      onClose();
+      onClose(); // Fecha o modal ou componente
     } catch (error) {
       console.error("Erro no cadastro/edição:", error);
       alert("Erro: " + (error.body?.error || error.message));
@@ -99,6 +115,7 @@ export default function CreateProduct({ productToEdit, onClose }) {
         />
         <input
           type="number"
+          step="0.01"
           placeholder="Valor (R$)"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
@@ -108,7 +125,7 @@ export default function CreateProduct({ productToEdit, onClose }) {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setNewImages(Array.from(e.target.files))}
+          onChange={handleFileChange}
           multiple
           className="border p-2 rounded"
         />

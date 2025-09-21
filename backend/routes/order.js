@@ -1,60 +1,92 @@
-import express from "express";
-import { PrismaClient } from "@prisma/client";
-import jwt from "jsonwebtoken";
+// backend/routes/order.js
+
+import { Router } from 'express';
+import { PrismaClient } from '@prisma/client';
+// 1. Usar o middleware centralizado e correto que já criamos
+import authenticateToken from '../middleware/auth.js'; 
 
 const prisma = new PrismaClient();
-const router = express.Router();
+const router = Router();
 
-// Middleware para autenticação
-function authMiddleware(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ error: "Token ausente" });
+// Rota para criar um novo pedido (finalizar compra)
+router.post('/orders', authenticateToken, async (req, res) => {
+  // O frontend deve enviar um array de 'items', cada um com 'id' e 'quantity'
+  const { items, paymentMethod } = req.body; 
+  const userId = req.user.id; // O ID do usuário vem do token verificado pelo middleware
 
-  try {
-    const token = auth.split(" ")[1];
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: "Token inválido" });
+  if (!items || items.length === 0) {
+    return res.status(400).json({ message: 'O carrinho está vazio.' });
   }
-}
-
-// Criar pedido
-router.post("/orders", authMiddleware, async (req, res) => {
-  const { items } = req.body;
-  if (!items || items.length === 0)
-    return res.status(400).json({ error: "Carrinho vazio" });
 
   try {
-    // pegar o vendedor do primeiro produto (simples por enquanto)
-    const product = await prisma.product.findUnique({
-      where: { id: items[0].id },
-    });
-    if (!product) return res.status(400).json({ error: "Produto inválido" });
+    // 2. Iniciar uma transação para garantir a integridade dos dados
+    const newOrder = await prisma.$transaction(async (tx) => {
+      // 2a. Encontrar o 'Customer' correspondente ao 'User' logado
+      const customer = await tx.customer.findUnique({
+        where: { userId: userId },
+      });
 
-    const order = await prisma.order.create({
-      data: {
-        customerId: req.user.userId,
-        sellerId: product.sellerId,
-        totalCents: items.reduce(
-          (sum, item) => sum + item.priceCents * item.quantity,
-          0
-        ),
-        items: {
-          create: items.map((item) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            unitCents: item.priceCents,
-          })),
+      if (!customer) {
+        throw new Error('Perfil de cliente não encontrado.');
+      }
+
+      // 2b. Calcular o total real buscando os preços no banco de dados
+      let totalCents = 0;
+      for (const item of items) {
+        const product = await tx.product.findUnique({ where: { id: item.id } });
+        if (!product) throw new Error(`Produto com ID ${item.id} não encontrado.`);
+        totalCents += product.priceCents * item.quantity;
+      }
+
+      // 2c. Criar o registro principal do Pedido (Order)
+      const order = await tx.order.create({
+        data: {
+          customerId: customer.id,
+          totalCents: totalCents,
+          status: 'PLACED', // Marcamos o pedido como "Feito"
+          paymentMethod: paymentMethod, 
         },
-      },
-      include: { items: true },
+      });
+
+      // 2d. Loop para processar CADA item do carrinho
+      for (const item of items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.id },
+        });
+
+        // Validar estoque
+        if (!product || product.stock < item.quantity) {
+          throw new Error(`Estoque insuficiente para o produto: ${product.name}`);
+        }
+
+        // Criar o registro do Item de Pedido (OrderItem)
+        await tx.orderItem.create({
+          data: {
+            orderId: order.id,
+            productId: product.id,
+            quantity: item.quantity,
+            unitCents: product.priceCents, // Preço do DB!
+          },
+        });
+
+        // 3. ATUALIZAR O ESTOQUE - O passo que faltava!
+        await tx.product.update({
+          where: { id: product.id },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+
+      return order; // Retorna o pedido criado se tudo deu certo
     });
 
-    res.json(order);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao criar pedido" });
+    res.status(201).json({ message: 'Pedido criado com sucesso!', order: newOrder });
+  } catch (error) {
+    console.error('Erro ao criar pedido:', error);
+    res.status(500).json({ message: error.message || 'Erro ao processar o pedido.' });
   }
 });
 

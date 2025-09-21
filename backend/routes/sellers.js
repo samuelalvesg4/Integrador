@@ -1,27 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { Router } from "express";
+import authenticateToken from '../middleware/auth.js'
 
 const prisma = new PrismaClient();
 const router = Router();
 
 // --- Middleware de autenticação ---
-const authMiddleware = async (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ message: "Token não fornecido" });
-
-  const token = authHeader.split(" ")[1];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "SEGREDO_DO_TOKEN");
-    req.user = decoded; // contém id, email, role
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Token inválido" });
-  }
-};
 
 // --- Retorna produtos do vendedor autenticado ---
-router.get("/my-products", authMiddleware, async (req, res) => {
+router.get("/my-products", authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== "seller") return res.status(403).json({ message: "Acesso negado" });
 
@@ -40,7 +28,7 @@ router.get("/my-products", authMiddleware, async (req, res) => {
 });
 
 // --- Cadastra novo produto ---
-router.post("/products", authMiddleware, async (req, res) => {
+router.post("/products", authenticateToken, async (req, res) => {
   try {
     if (req.user.role !== "seller") return res.status(403).json({ message: "Acesso negado" });
 
@@ -69,31 +57,62 @@ router.post("/products", authMiddleware, async (req, res) => {
 });
 
 // --- Retorna vendas do vendedor ---
-router.get("/sales", authMiddleware, async (req, res) => {
+router.get("/sales", authenticateToken, async (req, res) => {
   try {
-    if (req.user.role !== "seller") return res.status(403).json({ message: "Acesso negado" });
+    console.log('--- Verificando Vendas ---');
+    console.log('ID do Usuário (do token):', req.user.id);
+    if (req.user.role !== "seller") {
+      return res.status(403).json({ message: "Acesso negado" });
+    }
 
-    const seller = await prisma.seller.findUnique({ where: { userId: req.user.id } });
-    if (!seller) return res.status(403).json({ message: "Vendedor não encontrado" });
-
-    const sales = await prisma.order.findMany({
-      where: { product: { sellerId: seller.id } },
-      include: { product: true, client: true },
-      orderBy: { createdAt: "desc" },
+    const seller = await prisma.seller.findUnique({
+      where: { userId: req.user.id },
     });
 
-    const formattedSales = sales.map((sale) => ({
-      id: sale.id,
-      productName: sale.product.name,
-      clientName: sale.client.name,
-      quantity: sale.quantity,
-      total: sale.total,
-      createdAt: sale.createdAt,
+    if (!seller) {
+      return res.status(403).json({ message: "Vendedor não encontrado" });
+    }
+
+    const itemsVendidos = await prisma.orderItem.findMany({
+      where: {
+        product: {
+          sellerId: seller.id,
+        },
+      },
+      include: {
+        product: true,
+        order: {
+          include: {
+            customer: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+      // CORREÇÃO FINAL: Ordenando pelo createdAt do pedido relacionado
+      orderBy: {
+        order: {
+          createdAt: "desc",
+        },
+      },
+    });
+
+    // Esta parte já estava correta, buscando a data do pedido
+    const formattedSales = itemsVendidos.map((item) => ({
+      id: item.id,
+      productName: item.product.name,
+      clientName: item.order.customer.user.name,
+      quantity: item.quantity,
+      unitCents: item.unitCents,
+      createdAt: item.order.createdAt,
+      paymentMethod: item.order.paymentMethod, // A data vem do pedido
     }));
 
     res.json(formattedSales);
   } catch (err) {
-    console.error(err);
+    console.error("Erro detalhado ao buscar vendas:", err);
     res.status(500).json({ message: "Erro ao buscar vendas" });
   }
 });
