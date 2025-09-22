@@ -1,0 +1,64 @@
+/* frontend/src/pages/SellerDashboard.css */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.dashboard-container h1 {
+    font-size: 2.5rem;
+    color: #2B0B00; /* Cor escura do seu projeto */
+}
+
+.dashboard-subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 3rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    /* Cria colunas responsivas que se ajustam ao tamanho da tela */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.dashboard-card {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-decoration: none;
+    color: #333;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    position: relative;
+    border-left: 5px solid transparent;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    border-left-color: #FF851E; /* Cor primária do seu projeto */
+}
+
+.dashboard-card h2 {
+    font-size: 1.5rem;
+    color: #2B0B00;
+    margin-bottom: 0.5rem;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #dc3545; /* Vermelho para destaque */
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.5);
+}

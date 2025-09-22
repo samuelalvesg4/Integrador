@@ -1,0 +1,124 @@
+/* Estrutura principal do carrinho */
+.cart-wrapper {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Container do cabeçalho e dos itens */
+.cart-grid {
+    display: grid;
+    /* Define 5 colunas: uma para a imagem e nome, e uma para cada outro campo */
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+/* Estilo para o cabeçalho (títulos das colunas) */
+.cart-header {
+    font-weight: bold;
+    color: #6c757d;
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 0.5rem;
+}
+
+/* Estilo para cada item do carrinho */
+.cart-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Container do produto (imagem e nome) */
+.product-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.product-info img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* Estilo para os controles de quantidade (+ e -) */
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-controls button {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    color: #495057;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Estilo para o botão de remover */
+.remove-button {
+    color: #dc3545;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Estilo para a seção de subtotal e frete */
+.summary-container {
+    max-width: 400px;
+    margin: 2rem 0 0 auto;
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+}
+
+.summary-total {
+    font-size: 1.5rem;
+    font-weight: bold;
+    border-top: 1px dashed #ced4da;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+/* Media query para telas menores */
+@media (max-width: 768px) {
+    .cart-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .cart-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .product-info {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .quantity-controls {
+        justify-content: center;
+    }
+}
