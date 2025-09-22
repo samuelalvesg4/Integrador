@@ -3,12 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { useCart } from '../context/CartContext';
 import { finalizarCompra } from '../services/api';
+import './checkout.css'; // Importando o CSS que criamos
 
 export default function Checkout() {
     const navigate = useNavigate();
-    const { cartItems, clearCart } = useCart();
-
-    // Estados do formulário
+    
+    // --- MUDANÇA PRINCIPAL AQUI ---
+    // Pegamos 'checkoutItems' do contexto e o renomeamos para 'cartItems'.
+    // Agora, 'cartItems' dentro deste componente refere-se APENAS aos itens selecionados para compra.
+    const { checkoutItems: cartItems, clearCart } = useCart();
+    
+    // Estados do formulário de endereço
     const [cep, setCep] = useState('');
     const [logradouro, setLogradouro] = useState('');
     const [bairro, setBairro] = useState('');
@@ -17,21 +22,38 @@ export default function Checkout() {
     const [numero, setNumero] = useState('');
     const [complemento, setComplemento] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('');
-
     const [loadingCep, setLoadingCep] = useState(false);
+    
+    const [checkoutStep, setCheckoutStep] = useState('details'); 
+    const [paymentData, setPaymentData] = useState({});
 
-    const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    // O subtotal é calculado corretamente com base nos itens filtrados
+    const subtotal = cartItems.reduce((acc, item) => acc + (item.priceCents || item.price * 100) * item.quantity, 0);
 
-    // Carrega dados do carrinho
     useEffect(() => {
-        if (cartItems.length === 0) {
+        // Se não houver itens para o checkout, volta para o carrinho
+        if (cartItems.length === 0 && checkoutStep === 'details') {
+            alert("Nenhum item selecionado para checkout. Redirecionando para o carrinho.");
             navigate('/cart');
         }
-    }, [cartItems, navigate]);
+    }, [cartItems, navigate, checkoutStep]);
 
-    // Lógica para buscar o endereço via CEP
+    const generateRandomPixKey = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+
+    const generateFakeBoletoNumber = () => {
+        let number = '';
+        for (let i = 0; i < 48; i++) {
+            number += Math.floor(Math.random() * 10);
+            if ([4, 9, 14, 19, 24, 29, 34, 39, 43].includes(i)) number += ' ';
+        }
+        return number;
+    };
+
     const handleCepChange = async (e) => {
-        const newCep = e.target.value;
+        const newCep = e.target.value.replace(/\D/g, '');
         setCep(newCep);
         if (newCep.length === 8) {
             setLoadingCep(true);
@@ -53,215 +75,126 @@ export default function Checkout() {
             }
         }
     };
-
-    // Lógica para simular a finalização da compra
-    const handleFinalizarCompra = async (e) => {
+    
+    const handleProceedToPayment = (e) => {
         e.preventDefault();
-        // if (!logradouro || !numero || !paymentMethod) {
-        //     alert('Por favor, preencha o endereço completo e escolha uma forma de pagamento.');
-        //     return;
-        // }
+        if (!logradouro || !numero || !paymentMethod) {
+            alert('Por favor, preencha o endereço completo e escolha uma forma de pagamento.');
+            return;
+        }
+        if (paymentMethod === 'Pix') setPaymentData({ pixKey: generateRandomPixKey() });
+        else if (paymentMethod === 'Boleto') setPaymentData({ boletoNumber: generateFakeBoletoNumber() });
+        setCheckoutStep('payment');
+    };
 
+    const handleConfirmPayment = async () => {
         const orderData = {
-            items: cartItems.map(item => ({
-            id: item.id,
-            quantity: item.quantity,
-            name: item.name
-            })),
+            items: cartItems.map(item => ({ id: item.id, quantity: item.quantity })),
             totalCents: subtotal,
-            paymentMethod: paymentMethod, // <-- ADICIONE ESTA LINHA
+            paymentMethod: paymentMethod,
         };
-
-        // --- NOSSOS TESTES ---
-        console.log("1. PREPARANDO PARA ENVIAR PEDIDO...");
-        console.log("Dados que serão enviados:", orderData);
-        // ---------------------
-
         try {
-            console.log("2. CHAMANDO a função createOrder...");
             await finalizarCompra(orderData);
-
-            alert(`Pedido finalizado com sucesso!`);
+            alert(`Pagamento confirmado! Pedido finalizado com sucesso!`);
             clearCart();
             navigate('/');
-
         } catch (err) {
-            console.error("3. ERRO na chamada da API:", err);
+            console.error("Erro ao finalizar compra:", err);
             alert(err.body?.message || "Não foi possível finalizar a compra.");
         }
     };
-
-    const handleTestApi = async () => {
-    console.log("--- TESTE DE API INICIADO ---");
-    try {
-      // Vamos enviar dados mínimos só para testar a conexão
-      const testData = {
-        items: [{ id: 1, quantity: 1 }], // Use um ID de produto que exista no seu DB
-        totalCents: 1000,
-      };
-      console.log("Enviando dados de teste:", testData);
-      
-      // Use o nome da sua função aqui: finalizarCompra ou createOrder
-      await finalizarCompra(testData); 
-      
-      console.log("--- TESTE DE API: SUCESSO ---");
-      alert("TESTE: A API respondeu com sucesso!");
-
-    } catch (error) {
-      console.error("--- TESTE DE API: ERRO ---", error);
-      alert("TESTE: A API respondeu com um erro. Verifique o console e a aba Rede.");
-    }
-  };
-
+    
     return (
         <div>
             <Header />
-            <main className="max-w-4xl mx-auto p-6">
-                <h1 className="text-2xl font-bold mb-6">Finalizar Compra</h1>
+            <main className="checkout-page">
+                <h1>Finalizar Compra</h1>
 
-                <form onSubmit={handleFinalizarCompra}>
-                    {/* Resumo do Pedido */}
-                    <div className="bg-gray-100 p-4 rounded-md mb-6">
-                        <h2 className="text-xl font-semibold mb-2">Resumo do Pedido</h2>
-                        {cartItems.map((item) => (
-                            <div key={item.id} className="flex justify-between items-center text-sm mb-1">
-                                <span>{item.name} ({item.quantity})</span>
-                                <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                        ))}
-                        <div className="flex justify-between font-bold mt-2 pt-2 border-t">
-                            <span>Total:</span>
-                            <span>R$ {subtotal.toFixed(2)}</span>
+                {checkoutStep === 'details' ? (
+                    <div className="checkout-container">
+                        <div className="address-payment-forms">
+                            <form onSubmit={handleProceedToPayment} id="checkoutForm">
+                                <section className="checkout-section">
+                                    <h2>Endereço de Entrega</h2>
+                                    <div className="address-form-grid">
+                                        <div className="form-group"><label>CEP</label><input type="text" value={cep} onChange={handleCepChange} required disabled={loadingCep} /></div>
+                                        <div className="form-group"><label>Rua</label><input type="text" value={logradouro} onChange={(e) => setLogradouro(e.target.value)} required /></div>
+                                        <div className="form-group"><label>Bairro</label><input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} required /></div>
+                                        <div className="form-group"><label>Cidade</label><input type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} required /></div>
+                                        <div className="form-group"><label>Estado</label><input type="text" value={estado} onChange={(e) => setEstado(e.target.value)} required /></div>
+                                        <div className="form-group"><label>Número</label><input type="text" value={numero} onChange={(e) => setNumero(e.target.value)} required /></div>
+                                        <div className="form-group full-width"><label>Complemento</label><input type="text" value={complemento} onChange={(e) => setComplemento(e.target.value)} /></div>
+                                    </div>
+                                </section>
+                                
+                                <section className="checkout-section">
+                                    <h2>Forma de Pagamento</h2>
+                                    <div className="payment-options">
+                                        <label className="payment-option"><input type="radio" name="payment" value="Pix" checked={paymentMethod === 'Pix'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Pix</span></label>
+                                        <label className="payment-option"><input type="radio" name="payment" value="Cartão" checked={paymentMethod === 'Cartão'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Cartão de Crédito</span></label>
+                                        <label className="payment-option"><input type="radio" name="payment" value="Boleto" checked={paymentMethod === 'Boleto'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Boleto Bancário</span></label>
+                                    </div>
+                                </section>
+                            </form>
                         </div>
-                    </div>
 
-                    {/* Formulário de Endereço */}
-                    <div className="bg-white p-6 rounded-md shadow mb-6">
-                        <h2 className="text-xl font-semibold mb-4">Endereço de Entrega</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block mb-1">CEP</label>
-                                <input
-                                    type="text"
-                                    value={cep}
-                                    onChange={handleCepChange}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                    disabled={loadingCep}
-                                />
+                        <aside className="order-summary checkout-section">
+                            <h2>Resumo do Pedido</h2>
+                            {cartItems.map((item) => (
+                                <div key={item.id} className="summary-item">
+                                    <span>{item.name} (x{item.quantity})</span>
+                                    <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((item.priceCents || item.price * 100) * item.quantity / 100)}</span>
+                                </div>
+                            ))}
+                            <div className="summary-total">
+                                <span>Total:</span>
+                                <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotal / 100)}</span>
                             </div>
-                            <div>
-                                <label className="block mb-1">Rua</label>
-                                <input
-                                    type="text"
-                                    value={logradouro}
-                                    onChange={(e) => setLogradouro(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block mb-1">Bairro</label>
-                                <input
-                                    type="text"
-                                    value={bairro}
-                                    onChange={(e) => setBairro(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block mb-1">Cidade</label>
-                                <input
-                                    type="text"
-                                    value={cidade}
-                                    onChange={(e) => setCidade(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block mb-1">Estado</label>
-                                <input
-                                    type="text"
-                                    value={estado}
-                                    onChange={(e) => setEstado(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block mb-1">Número</label>
-                                <input
-                                    type="text"
-                                    value={numero}
-                                    onChange={(e) => setNumero(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                            </div>
-                            <div className="col-span-1 md:col-span-2">
-                                <label className="block mb-1">Complemento</label>
-                                <input
-                                    type="text"
-                                    value={complemento}
-                                    onChange={(e) => setComplemento(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                />
-                            </div>
-                        </div>
+                            <button type="submit" form="checkoutForm" className="btn btn-primary" style={{marginTop: '2rem'}}>
+                                Prosseguir para Pagamento
+                            </button>
+                        </aside>
                     </div>
-                    {/* Forma de Pagamento */}
-                    <div className="bg-white p-6 rounded-md shadow mb-6">
-                        <h2 className="text-xl font-semibold mb-4">Forma de Pagamento</h2>
-                        <div className="space-y-4">
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    name="payment"
-                                    value="Pix"
-                                    checked={paymentMethod === 'Pix'}
-                                    onChange={(e) => setPaymentMethod(e.target.value)}
-                                />
-                                <span>Pix</span>
-                            </label>
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    name="payment"
-                                    value="Cartão"
-                                    checked={paymentMethod === 'Cartão'}
-                                    onChange={(e) => setPaymentMethod(e.target.value)}
-                                />
-                                <span>Cartão de Crédito</span>
-                            </label>
-                            <label className="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    name="payment"
-                                    value="Boleto"
-                                    checked={paymentMethod === 'Boleto'}
-                                    onChange={(e) => setPaymentMethod(e.target.value)}
-                                />
-                                <span>Boleto Bancário</span>
-                            </label>
-                        </div>
-                    </div>
-                    <button
-                        type="submit"
-                        className="bg-green-600 text-white px-6 py-3 rounded-full w-full font-bold hover:bg-green-700"
-                    >
-                        Finalizar Compra
-                    </button>
-                    {/* --- BOTÃO DE TESTE ADICIONADO AQUI --- */}
-        <button
-          onClick={handleTestApi}
-          className="bg-orange-500 text-white px-6 py-3 rounded-full w-full font-bold hover:bg-orange-600 mt-4"
-        >
-          TESTAR API DIRETAMENTE
-        </button>
-        {/* ------------------------------------ */}
-                </form>
+                ) : (
+                    <section className="checkout-section payment-simulation-box">
+                        <h2>Realize o Pagamento</h2>
+                        
+                        {paymentMethod === 'Pix' && (
+                            <div>
+                                <h3>Pagamento com Pix</h3>
+                                <p>Copie a chave Pix abaixo para realizar o pagamento:</p>
+                                <div className="payment-code">{paymentData.pixKey}</div>
+                                <img src="https://i.imgur.com/gsv936s.png" alt="Exemplo de QR Code" className="payment-image qr-code" />
+                            </div>
+                        )}
+
+                        {paymentMethod === 'Boleto' && (
+                            <div>
+                                <h3>Pagamento com Boleto</h3>
+                                <p>Use o código abaixo para pagar o boleto:</p>
+                                <div className="payment-code">{paymentData.boletoNumber}</div>
+                                <img src="https://i.imgur.com/qDc4s4s.png" alt="Exemplo de Código de Barras" className="payment-image barcode" />
+                            </div>
+                        )}
+
+                        {paymentMethod === 'Cartão' && (
+                            <div>
+                                <h3>Pagamento com Cartão de Crédito</h3>
+                                <p>Preencha os dados abaixo. (Não use dados reais).</p>
+                                <div className="address-form-grid" style={{marginTop: '1.5rem'}}>
+                                    <div className="form-group full-width"><input type="text" placeholder="Número do Cartão (ex: 4242 4242 4242 4242)" /></div>
+                                    <div className="form-group full-width"><input type="text" placeholder="Nome no Cartão" /></div>
+                                    <div className="form-group"><input type="text" placeholder="Validade (MM/AA)" /></div>
+                                    <div className="form-group"><input type="text" placeholder="CVV" /></div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <button onClick={handleConfirmPayment} className="btn btn-confirm" style={{marginTop: '2rem'}}>
+                            Já realizei o pagamento
+                        </button>
+                    </section>
+                )}
             </main>
         </div>
     );
