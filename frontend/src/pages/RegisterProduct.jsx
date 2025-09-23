@@ -72,7 +72,7 @@ const RegisterProduct = () => {
         }
 
         alert("Produto cadastrado e imagens enviadas com sucesso!");
-        navigate('/MyProducts');
+        navigate('/register-product');
 
     } catch (error) {
         console.error("Erro ao cadastrar produto:", error);

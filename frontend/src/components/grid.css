@@ -1,46 +1,43 @@
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(5, 1fr);
-    gap: 10px; /* Espaço entre as células */
-    width: 90%; /* Largura do grid */
-    max-width: 1200px; /* Largura máxima aumentada em 50% (exemplo de 800px para 1200px) */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Ajusta as colunas automaticamente */
+    gap: 10px;
+    width: 90%;
+    max-width: 1200px;
     padding: 10px;
-    background-color: transparent; /* Fundo transparente */
+    background-color: transparent;
     border-radius: 8px;
-    box-shadow: none; /* Sem sombra */
-    
-    /* Centralização na página */
+    box-shadow: none;
     margin: 0 auto;
 }
 
 .grid-item {
-    background-color: transparent; /* Fundo transparente */
-    color: black; /* Cor do texto para ser visível em qualquer fundo */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background-color: #fff;
+    color: black;
+    /* Remover o flexbox do item para que o ProductCard use o layout dele */
+    /* display: flex; */
+    /* justify-content: center; */
+    /* align-items: center; */
     font-size: 1.2em;
-    border-radius: 4px;
+    border-radius: 8px;
     padding: 20px;
     text-align: center;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilo para quando não houver produtos */
 .no-products {
-    grid-column: 1 / -1; /* Ocupa a largura total */
+    grid-column: 1 / -1;
 }
 
-
-/* Media queries para responsividade */
 @media (max-width: 768px) {
     .grid-container {
-        grid-template-columns: repeat(3, 1fr); /* 3 colunas em telas médias */
+        /* grid-template-columns: repeat(3, 1fr);  */
     }
 }
 
 @media (max-width: 480px) {
     .grid-container {
-        grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas pequenas */
+        /* grid-template-columns: repeat(2, 1fr); */
     }
 }

@@ -1,3 +1,4 @@
+// frontend/src/pages/Home.jsx
 import React, { useEffect, useState } from 'react';
 import ProductCard from '../components/ProductCard';
 import Header from '../components/Header';
@@ -10,7 +11,7 @@ const Home = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [query, setQuery] = useState('');
-    
+
     useEffect(() => {
         const fetchAllProducts = async () => {
             try {
@@ -34,10 +35,6 @@ const Home = () => {
         product.name.toLowerCase().includes(query.toLowerCase())
     );
 
-    const gridSize = 25;
-    const productsToDisplay = filteredProducts.slice(0, gridSize);
-    const emptyCells = gridSize - productsToDisplay.length;
-
     return (
         <>
             <Header />
@@ -48,7 +45,8 @@ const Home = () => {
             <Wrapper>
                 {loading ? (
                     <div className="grid-container">
-                        {Array.from({ length: gridSize }, (_, index) => (
+                        {/* Renderiza um esqueleto de carregamento */}
+                        {Array.from({ length: 5 }, (_, index) => (
                             <div key={index} className="grid-item loading">
                                 <p>Carregando...</p>
                             </div>
@@ -56,14 +54,11 @@ const Home = () => {
                     </div>
                 ) : filteredProducts.length > 0 ? (
                     <div className="grid-container">
-                        {productsToDisplay.map((product) => (
+                        {/* CORRIGIDO: Mapeia apenas sobre os produtos que existem */}
+                        {filteredProducts.map((product) => (
                             <div key={product.id} className="grid-item">
                                 <ProductCard product={product} />
                             </div>
-                        ))}
-                        
-                        {Array.from({ length: emptyCells }, (_, index) => (
-                            <div key={`empty-${index}`} className="grid-item empty"></div>
                         ))}
                     </div>
                 ) : (

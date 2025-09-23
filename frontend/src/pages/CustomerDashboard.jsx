@@ -1,12 +1,8 @@
-// frontend/src/pages/CustomerDashboard.jsx
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { useNavigate } from 'react-router-dom';
+// Removido 'useNavigate' pois não é usado
 import useAuth from '../hooks/useAuth';
 import { getOrders, cancelOrder } from '../services/api';
-// Não precisamos importar o CSS externo mais
-// import '../pages/MyProducts.css';
 
 export default function CustomerDashboard() {
     useAuth({ role: 'customer' });
@@ -78,7 +74,6 @@ export default function CustomerDashboard() {
         <div className="min-h-screen bg-gray-100">
             <Header />
             <div className="w-full flex justify-center mt-10 px-4 sm:px-6 lg:px-8">
-                {/* Estilo CSS inserido aqui */}
                 <style>{dashboardStyles}</style>
                 <div className="customer-dashboard-wrapper">
                     <h2 className="text-3xl font-bold mb-6 text-gray-800">Meus Pedidos</h2>
@@ -105,7 +100,7 @@ export default function CustomerDashboard() {
                                 </ul>
                                 <div className="flex justify-between items-center">
                                     <span className="font-bold">Total: {formatPrice(order.totalCents)}</span>
-                                    {order.status === 'PLACED' && (
+                                    {order.status !== 'CANCELLED' && (
                                         <button 
                                             onClick={() => handleCancelOrder(order.id)}
                                             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"

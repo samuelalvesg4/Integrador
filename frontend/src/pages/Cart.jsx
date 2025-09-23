@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import { useCart } from '../context/CartContext';
-import '../components/cart.css'; // Certifique-se que o CSS está sendo importado
+import '../components/cart.css';
 
 export default function Cart() {
     // Pegando todos os dados e funções do nosso context atualizado
@@ -85,14 +85,12 @@ export default function Cart() {
                     <p>Seu carrinho está vazio.</p>
                 ) : (
                     <div className="cart-wrapper">
-                        <div className="cart-header">
-                        <h1>Meu Carrinho</h1>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Meu Carrinho</h1>
+                        
+                        {/* CORRIGIDO: O cabeçalho agora usa a mesma classe de grid */}
+                        <div className="cart-grid cart-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <input 
-                                    type="checkbox"
-                                    checked={isAllSelected}
-                                    onChange={toggleSelectAll}
-                                />
+                                <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} />
                                 <span>Produto</span>
                             </div>
                             <div>Preço Unitário</div>
@@ -104,15 +102,11 @@ export default function Cart() {
                         {cartItems.map((item) => (
                             <div key={item.id} className="cart-item cart-grid">
                                 <div className="product-info">
-                                    <input 
-                                        type="checkbox"
-                                        checked={selectedItems.includes(item.id)}
-                                        onChange={() => toggleItemSelection(item.id)}
-                                    />
+                                    <input type="checkbox" checked={selectedItems.includes(item.id)} onChange={() => toggleItemSelection(item.id)} />
                                     {item.images && item.images.length > 0 ? (
-                                        <img src={item.images[0].url} alt={item.name} />
+                                        <img src={item.images[0].url} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
                                     ) : (
-                                        <div className="placeholder-image" style={{ width: '80px', height: '80px', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
+                                        <div style={{ width: '80px', height: '80px', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
                                             <span style={{ fontSize: '12px', color: '#888' }}>Sem Imagem</span>
                                         </div>
                                     )}

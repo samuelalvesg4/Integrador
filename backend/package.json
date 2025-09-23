@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node --watch index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@prisma/client": "^6.16.1",

@@ -31,6 +31,17 @@ export default function Sales() {
         }).format(priceCents / 100);
     };
 
+    const getStatusTextAndColor = (status) => {
+        switch (status) {
+            case 'CANCELLED':
+                return { text: 'Cancelada', color: 'text-red-500' };
+            case 'COMPLETED':
+                return { text: 'Concluída', color: 'text-green-500' };
+            default:
+                return { text: 'Desconhecido', color: 'text-gray-500' }; // Valor padrão
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-100">
             <Header />
@@ -60,20 +71,22 @@ export default function Sales() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {sales.map((sale) => (
-                                        <tr key={sale.id} className="products-table-row">
-                                            {/* CORRIGIDO: Acessando os dados com verificação de segurança */}
-                                            <td>{sale.product?.name || 'N/A'}</td>
-                                            <td>{sale.quantity}</td>
-                                            <td>{formatPrice(sale.unitCents)}</td>
-                                            <td>{formatPrice(sale.unitCents * sale.quantity)}</td>
-                                            <td>{sale.order?.customer?.user?.name || 'N/A'}</td>
-                                            <td>{sale.order?.createdAt ? new Date(sale.order.createdAt).toLocaleDateString() : 'N/A'}</td>
-                                            <td className={sale.order?.status === 'CANCELLED' ? 'text-red-500' : 'text-green-500'}>
-                                                {sale.order?.status === 'CANCELLED' ? 'Cancelada' : 'Concluída'}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {sales.map((sale) => {
+                                        const statusInfo = getStatusTextAndColor(sale.order?.status);
+                                        return (
+                                            <tr key={sale.id} className="products-table-row">
+                                                <td>{sale.product?.name || 'N/A'}</td>
+                                                <td>{sale.quantity}</td>
+                                                <td>{formatPrice(sale.unitCents)}</td>
+                                                <td>{formatPrice(sale.unitCents * sale.quantity)}</td>
+                                                <td>{sale.order?.customer?.user?.name || 'N/A'}</td>
+                                                <td>{sale.order?.createdAt ? new Date(sale.order.createdAt).toLocaleDateString() : 'N/A'}</td>
+                                                <td className={statusInfo.color}>
+                                                    {statusInfo.text}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
