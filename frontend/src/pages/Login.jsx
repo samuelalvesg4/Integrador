@@ -17,6 +17,10 @@ export default function Login() {
 
     try {
       const data = await login(email, password);
+
+      // Limpa dados antigos antes de salvar os novos
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
