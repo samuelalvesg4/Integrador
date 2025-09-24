@@ -25,29 +25,30 @@ export const CartProvider = ({ children }) => {
         localStorage.setItem('cartItems', JSON.stringify(cartItems));
     }, [cartItems]);
 
-    const addToCart = (product) => {
-    // A validação principal acontece antes de qualquer outra coisa
-    const itemInCart = cartItems.find((item) => item.id === product.id);
-    const currentQuantityInCart = itemInCart ? itemInCart.quantity : 0;
+    const addToCart = (product, quantity = 1) => {
+        const itemInCart = cartItems.find((item) => item.id === product.id);
+        const currentQuantityInCart = itemInCart ? itemInCart.quantity : 0;
 
-    if (currentQuantityInCart >= product.stock) {
-        alert("Você já adicionou a quantidade máxima em estoque para este item.");
-        return; // Impede a adição do item
-    }
-
-    setCartItems((prevItems) => {
-        const existingItem = prevItems.find((item) => item.id === product.id);
-        if (existingItem) {
-            return prevItems.map((item) =>
-                item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-            );
-        } else {
-            setSelectedItems(prevSelected => [...prevSelected, product.id]);
-            return [...prevItems, { ...product, quantity: 1 }];
+        if (currentQuantityInCart + quantity > product.stock) {
+            alert("A quantidade solicitada excede o estoque disponível.");
+            return false; // Retorna false se não foi possível adicionar
         }
-    });
-};
-    
+
+        setCartItems((prevItems) => {
+            const existingItem = prevItems.find((item) => item.id === product.id);
+            if (existingItem) {
+                return prevItems.map((item) =>
+                    item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
+                );
+            } else {
+                setSelectedItems(prevSelected => [...prevSelected, product.id]);
+                return [...prevItems, { ...product, quantity }];
+            }
+        });
+
+        return true; // Retorna true se adicionou com sucesso
+    };
+
     const removeItemFromCart = (id) => {
         setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
         setSelectedItems(prevSelected => prevSelected.filter(itemId => itemId !== id));
@@ -55,7 +56,7 @@ export const CartProvider = ({ children }) => {
 
     const clearCart = () => {
         // Agora, clearCart limpa o carrinho principal, não os itens do checkout.
-        const itemsToRemove = cartItems.filter(item => selectedItems.includes(item.id));
+        // const itemsToRemove = cartItems.filter(item => selectedItems.includes(item.id));
         const newCartItems = cartItems.filter(item => !selectedItems.includes(item.id));
         setCartItems(newCartItems);
         setSelectedItems([]);
@@ -77,7 +78,7 @@ export const CartProvider = ({ children }) => {
             setSelectedItems(cartItems.map(item => item.id));
         }
     };
-    
+
     // --- NOVA FUNÇÃO PARA INICIAR O CHECKOUT DE FORMA SEGURA ---
     const startCheckout = (itemsToCheckout) => {
         setCheckoutItems(itemsToCheckout);

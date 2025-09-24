@@ -252,4 +252,42 @@ router.get('/seller/sales', authenticateToken, async (req, res) => {
     }
 });
 
+router.get('/products/:id', async (req, res) => {
+    try {
+        const { id } = req.params; // Pega o ID da URL
+        const productId = parseInt(id, 10);
+
+        if (isNaN(productId)) {
+            return res.status(400).json({ error: 'ID de produto inválido.' });
+        }
+
+        const product = await prisma.product.findUnique({
+            where: { id: productId },
+            include: {
+                images: true, // Inclui as imagens do produto
+                seller: {     // Inclui os dados do vendedor
+                    include: {
+                        user: true // E os dados do usuário do vendedor (para o nome)
+                    }
+                }
+            }
+        });
+
+        if (!product) {
+            return res.status(404).json({ error: 'Produto não encontrado.' });
+        }
+
+        // Converte o preço de centavos para reais para o frontend
+        const productWithPrice = {
+            ...product,
+            price: product.priceCents / 100
+        };
+
+        res.status(200).json(productWithPrice);
+    } catch (err) {
+        console.error("Erro ao buscar produto por ID:", err);
+        res.status(500).json({ error: 'Erro ao buscar o produto.' });
+    }
+});
+
 export default router;

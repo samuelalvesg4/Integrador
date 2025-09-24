@@ -1,96 +1,104 @@
-// frontend/src/pages/Product.jsx
-
 import { useState, useEffect } from "react";
-import Header from "../components/Header";
 import Wrapper from "../components/Wrapper";
 import { useParams } from "react-router-dom";
 import { getProductById } from '../services/api';
 import { useCart } from '../context/CartContext';
+import Header from "../components/Header";
+import './ProductDetail.css'; // Importando o novo CSS
 
 export default function Product() {
-  const { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
-  // Use o hook para acessar a função de adicionar ao carrinho
-  const { addToCart } = useCart();
+    const { id } = useParams();
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedImage, setSelectedImage] = useState('');
+    const [quantity, setQuantity] = useState(1); // Novo estado para a quantidade
+    const { addToCart } = useCart();
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const data = await getProductById(id);
-        setProduct(data);
-      } catch (err) {
-        console.error("Erro ao buscar detalhes do produto", err);
-      } finally {
-        setLoading(false);
-      }
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const data = await getProductById(id);
+                setProduct(data);
+                if (data.images && data.images.length > 0) {
+                    setSelectedImage(data.images[0].url); // Define a primeira imagem como principal
+                }
+            } catch (err) {
+                console.error("Erro ao buscar detalhes do produto", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProduct();
+    }, [id]);
+
+    const handleQuantityChange = (amount) => {
+        const newQuantity = quantity + amount;
+        if (newQuantity >= 1 && newQuantity <= product.stock) {
+            setQuantity(newQuantity);
+        }
     };
-    fetchProduct();
-  }, [id]);
 
-  if (loading) {
+    const handleAddToCart = () => {
+        addToCart(product, quantity);
+        alert(`${quantity}x ${product.name} adicionado ao carrinho!`);
+    };
+
+    if (loading) return <Wrapper><p>Carregando produto...</p></Wrapper>;
+    if (!product) return <Wrapper><p>Produto não encontrado.</p></Wrapper>;
+
+    const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.priceCents / 100);
+    const isOutOfStock = product.stock <= 0;
+
     return (
-      <Wrapper>
-        <p>Carregando produto...</p>
-      </Wrapper>
-    );
-  }
+        <div>
+            <Header />
+            <Wrapper>
+                <div className="product-detail-container">
+                    {/* Galeria de Imagens */}
+                    <div className="product-gallery">
+                        <img src={selectedImage || 'https://via.placeholder.com/600'} alt={product.name} className="main-image" />
+                        <div className="thumbnail-images">
+                            {product.images && product.images.map(image => (
+                                <img 
+                                    key={image.id}
+                                    src={image.url} 
+                                    alt="thumbnail" 
+                                    className={`thumbnail ${selectedImage === image.url ? 'active' : ''}`}
+                                    onClick={() => setSelectedImage(image.url)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* Detalhes do Produto */}
+                    <div className="product-details">
+                        <h1 className="product-title">{product.name}</h1>
+                        <p className="product-description">{product.description}</p>
+                        <span className="product-price">{formattedPrice}</span>
+                        
+                        <div className={`stock-info ${isOutOfStock ? 'out-of-stock' : 'available'}`}>
+                            {isOutOfStock ? 'Esgotado' : `Em estoque: ${product.stock} unidades`}
+                        </div>
+                        
+                        {!isOutOfStock && (
+                            <>
+                                <div className="quantity-selector">
+                                    <label>Quantidade:</label>
+                                    <div className="quantity-controls">
+                                        <button onClick={() => handleQuantityChange(-1)}>-</button>
+                                        <input type="text" value={quantity} readOnly />
+                                        <button onClick={() => handleQuantityChange(1)}>+</button>
+                                    </div>
+                                </div>
 
-  if (!product) {
-    return (
-      <Wrapper>
-        <p>Produto não encontrado.</p>
-      </Wrapper>
-    );
-  }
-  
-  const getTransformedUrl = (url) => {
-    if (!url) return null;
-    const transformation = 'w_800,h_800,c_fill';
-    const parts = url.split('/upload/');
-    return `${parts[0]}/upload/${transformation}/${parts[1]}`;
-  };
-
-  const imageUrl = (product.images && product.images.length > 0)
-    ? getTransformedUrl(product.images[0].url)
-    : null;
-
-  const formattedPrice = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(product.price);
-
-  return (
-    <div>
-      <Header />
-      <Wrapper>
-        <div className="flex flex-col md:flex-row gap-6 p-6 bg-white rounded-lg shadow-md">
-          {/* Imagem do Produto */}
-          <div className="md:w-1/2 flex justify-center items-center">
-            {imageUrl ? (
-              <img src={imageUrl} alt={product.name} className="max-w-full h-auto rounded-lg" />
-            ) : (
-              <div className="w-full h-96 bg-gray-200 flex items-center justify-center text-gray-500 rounded-lg">
-                <span className="text-sm">Sem Imagem</span>
-              </div>
-            )}
-          </div>
-          {/* Detalhes do Produto */}
-          <div className="md:w-1/2 flex flex-col justify-center">
-            <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            <p className="text-gray-600 mb-4">{product.description}</p>
-            <span className="text-2xl font-bold text-gray-900 mb-4">{formattedPrice}</span>
-            <span className="text-lg text-gray-500">Em estoque: {product.stock}</span>
-            <button
-              onClick={() => addToCart(product)}
-              className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition duration-300"
-            >
-              Adicionar ao Carrinho
-            </button>
-          </div>
+                                <button onClick={handleAddToCart} className="add-to-cart-btn">
+                                    Adicionar ao Carrinho
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </Wrapper>
         </div>
-      </Wrapper>
-    </div>
-  );
+    );
 }

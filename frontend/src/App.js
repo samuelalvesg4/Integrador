@@ -11,7 +11,7 @@ import Home from "./pages/Home";
 import Cart from "./pages/Cart";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Checkout from "./pages/Checkout";
-import ProductDetail from "./pages/ProductDetail";
+import Product from "./pages/Product";
 import CreateProduct from "./pages/CreateProduct";
 import MyProducts from "./pages/MyProducts";
 import RegisterProduct from "./pages/RegisterProduct";
@@ -40,7 +40,7 @@ function App() {
               {/* --- Rotas Públicas --- */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/product/:id" element={<Product />} />
 
               {/* Rota principal que decide o que mostrar */}
               <Route path="/" element={<MainPage />} />

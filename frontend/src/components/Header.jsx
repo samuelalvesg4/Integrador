@@ -1,89 +1,109 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from '../context/CartContext';
 import useUser from '../hooks/useUser';
 import Logo from './logosemd.png';
+import './Header.css';
 
 export default function Header() {
     const user = useUser();
     const navigate = useNavigate();
     const { cartItems } = useCart();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 768) {
+                setIsMenuOpen(false);
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         window.dispatchEvent(new Event("userChanged"));
+        setIsMenuOpen(false);
         navigate("/login");
     };
-
+    
+    const closeMenu = () => setIsMenuOpen(false);
     const totalItems = Array.isArray(cartItems) ? cartItems.reduce((acc, item) => acc + item.quantity, 0) : 0;
-
     const isLoggedIn = !!user;
     const isSeller = user?.role === "seller";
     const isCustomer = user?.role === "customer" || user?.role === "client";
 
     return (
-        <header className="bg-white shadow-md p-4 flex justify-between items-center">
-            <Link to="/" className="flex items-center space-x-2">
-                <img src={Logo} alt="Logo da Loja" className="h-[50px]" />
-            </Link>
+        <header className="main-header">
+            <div className="header-content">
+                <Link to="/" className="logo-link">
+                    <img src={Logo} alt="Logo da Loja" className="logo-img" />
+                </Link>
 
-            <div className="flex items-center space-x-4">
-                {isLoggedIn ? (
-                    <>
-                        <div className="user-actions">
-                          <span className="font-medium">
-                              Olá, {user.name}
-                          </span>
-                          {isSeller && (
-                              <>
-                                  <Link to="/my-products" className="text-gray-600 hover:text-blue-600">Meus Produtos</Link>
-                                  <Link to="/sales" className="text-gray-600 hover:text-blue-600">Minhas Vendas</Link>
-                                  <Link to="/seller-dashboard" className="text-gray-600 hover:text-blue-600">Painel</Link>
-                              </>
-                          )}
-                          {isCustomer && (
-                              <>
-                                  <Link to="/customer-dashboard" className="text-gray-600 hover:text-blue-600">Meus Pedidos</Link>
-                                  <button
-                                      className="relative"
-                                      onClick={() => navigate("/cart")}
-                                  >
-                                      <ShoppingCart className="w-6 h-6 text-gray-800" />
-                                      {totalItems > 0 && (
-                                          <span className="absolute -top-2 -right-2 bg-red-500 text-xs text-white rounded-full w-5 h-5 flex items-center justify-center">
-                                              {totalItems}
-                                          </span>
-                                      )}
-                                  </button>
-                              </>
-                          )}
-                          
-                          <button
-                              onClick={handleLogout}
-                              className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                          >
-                              Sair
-                          </button>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <Link
-                            to="/login"
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                        >
-                            Login
-                        </Link>
-                        <Link
-                            to="/register"
-                            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-                        >
-                            Cadastro
-                        </Link>
-                    </>
-                )}
+                {/* --- NAVEGAÇÃO DE DESKTOP --- */}
+                <nav className="desktop-nav">
+                    {isLoggedIn ? (
+                        <>
+                            <span>Olá, {user.name}</span>
+                            {isSeller && (
+                                <>
+                                    <Link to="/my-products" className="header-link">Meus Produtos</Link>
+                                    <Link to="/sales" className="header-link">Minhas Vendas</Link>
+                                </>
+                            )}
+                            {isCustomer && (
+                                <>
+                                    <Link to="/customer-dashboard" className="header-link">Meus Pedidos</Link>
+                                    <button className="cart-button" onClick={() => navigate("/cart")}>
+                                        <ShoppingCart />
+                                        {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+                                    </button>
+                                </>
+                            )}
+                            <button onClick={handleLogout} className="logout-button">Sair</button>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/login" className="header-link">Login</Link>
+                            <Link to="/register" className="header-link">Cadastro</Link>
+                        </>
+                    )}
+                </nav>
+
+                {/* --- BOTÃO HAMBÚRGUER --- */}
+                <button className="hamburger-menu" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Menu">
+                    {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                </button>
+
+                {/* --- MENU MOBILE QUE EMPURRA --- */}
+                <nav className={`mobile-menu ${isMenuOpen ? 'open' : ''}`}>
+                    {isLoggedIn ? (
+                        <>
+                            <span>Olá, {user.name}</span>
+                            {isSeller && (
+                                <>
+                                    <Link to="/my-products" onClick={closeMenu} className="header-link">Meus Produtos</Link>
+                                    <Link to="/sales" onClick={closeMenu} className="header-link">Minhas Vendas</Link>
+                                </>
+                            )}
+                            {isCustomer && (
+                                <>
+                                    <Link to="/customer-dashboard" onClick={closeMenu} className="header-link">Meus Pedidos</Link>
+                                    <Link to="/cart" onClick={closeMenu} className="header-link">Carrinho ({totalItems})</Link>
+                                </>
+                            )}
+                            <button onClick={handleLogout} className="logout-button">Sair</button>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/login" onClick={closeMenu} className="header-link">Login</Link>
+                            <Link to="/register" onClick={closeMenu} className="header-link">Cadastro</Link>
+                        </>
+                    )}
+                </nav>
             </div>
         </header>
     );

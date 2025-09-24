@@ -1,26 +1,61 @@
-.search-bar {
+/* frontend/src/components/SearchBar.css */
+
+.search-bar-wrapper {
     display: flex;
-    align-items: center;
+    justify-content: center;
+    padding: 1rem 1rem;
+}
+
+.search-bar-container {
+    position: relative;
+    /* ESTADO PADRÃO (DESKTOP GRANDE) */
+    width: 45rem; /* ~720px */
+    transition: width 0.3s ease-in-out;
+}
+
+.search-input {
+    display: block;
     width: 100%;
-    max-width: 500px;
-    margin: 20px auto;
-    padding: 8px 12px;
-    border-radius: 25px;
-    background-color: #f2f2f2;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-  
-  .search-bar input {
-    flex: 1;
-    border: none;
+    border-radius: 9999px;
+    border: 1px solid #d1d5db;
+    background-color: #fff;
+    padding: 1rem;
+    font-size: 1rem;
+    color: #4b5563;
     outline: none;
-    padding: 8px 12px;
-    border-radius: 25px;
-    background-color: transparent;
-    font-size: 16px;
-  }
-  
-  .search-icon {
-    margin-right: 8px;
-    color: #888;
-  }
+    padding-right: 3.5rem; 
+    transition: border-color 0.2s;
+}
+
+.search-input:focus {
+    border-color: #FF851E;
+    box-shadow: 0 0 0 3px rgba(255, 133, 30, 0.2);
+}
+
+.search-icon {
+    position: absolute;
+    top: 50%;
+    right: 1.25rem;
+    transform: translateY(-50%);
+    height: 1.25rem;
+    width: 1.25rem;
+    color: #9ca3af;
+}
+
+/* --- ORDEM CORRIGIDA DAS MEDIA QUERIES --- */
+
+/* PRIMEIRO, o ponto de quebra MAIOR */
+@media (max-width: 800px) {
+    .search-bar-container {
+        width: 35rem; /* Um pouco maior que 30rem para um passo intermediário */
+    }
+}
+
+/* DEPOIS, o ponto de quebra MENOR */
+@media (max-width: 600px) { /* Ajustei para 600px para um melhor efeito */
+    .search-bar-container {
+        /* Em telas muito pequenas, é mais seguro usar uma largura fluida
+           para garantir que nunca quebre o layout. */
+        width: 20rem;
+    }
+}

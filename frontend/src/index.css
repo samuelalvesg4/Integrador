@@ -1,39 +1,26 @@
-/* Reset básico */
+/* --- GERAL E RESET BÁSICO --- */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+#root{
+  height: 100vh;
+}
+
+.flex.flex-col.min-h-screen{
+  height: 100%;
+}
+
+body {
     font-family: Arial, sans-serif;
-  }
-  
-  body {
     background-color: #f8f8f8;
     color: #333;
-  }
-  
-  /* Header */
-  header {
-    background-color: #2B0B00;
-    color: #fff;
-    padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  
-  header a {
-    color: #FF851E;
-    text-decoration: none;
-    margin: 0 1rem;
-  }
-  
-  header a:hover {
-    text-decoration: underline;
-  }
-  
-  /* Botões */
-  button {
+}
+
+/* --- BOTÕES (BOA PRÁTICA) --- */
+button {
     background-color: #FF851E;
     border: none;
     color: #fff;
@@ -41,137 +28,165 @@
     margin: 0.5rem 0;
     cursor: pointer;
     border-radius: 5px;
-  }
-  
-  button:hover {
+    font-weight: bold; /* Adicionado para consistência */
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+button:hover {
     background-color: #e07215;
-  }
-  
-  /* Forms */
-  form {
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+
+/* Estilo baseado em CLASSES (boa prática para o futuro) */
+/* Você pode usar essas classes para ter mais controle */
+.btn {
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
+}
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background-color: #FF851E;
+    color: #fff;
+}
+.btn-primary:hover {
+    background-color: #e07215;
+}
+
+
+/* --- FORMULÁRIOS --- */
+form {
     background: #fff;
     padding: 2rem;
     max-width: 400px;
     margin: 2rem auto;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-  
-  form input, form textarea {
+}
+
+form input, form textarea {
     width: 100%;
     padding: 0.5rem;
     margin: 0.5rem 0;
-  }
-  
-  /* Home e grid produtos */
-  .products-grid {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+
+/* --- LAYOUT DA HOME E PRODUTOS --- */
+.products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
+    gap: 1.5rem;
     padding: 2rem;
-  }
-  
-  /* ProductCard */
-  .product-card {
+}
+
+/* Card do Produto */
+.product-card {
     background: #fff;
     padding: 1rem;
     border-radius: 10px;
     text-align: center;
     box-shadow: 0 0 10px rgba(0,0,0,0.05);
     transition: transform 0.2s;
-  }
-  
-  .product-card:hover {
+}
+
+.product-card:hover {
     transform: translateY(-5px);
-  }
-  
-  .product-card img {
+}
+
+/* .product-card img {
     width: 100%;
     height: 150px;
-    object-fit: cover;
+    object-fit: contain;  'contain' geralmente é melhor para não cortar o produto 
     border-radius: 5px;
-  }
-  
-  /* Cart */
-  ul {
-    list-style: none;
-    margin: 1rem 0;
-    padding: 0;
-  }
-  
-  ul li {
-    background: #fff;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+}*/
 
-  /* Adicione ao final do seu arquivo index.css */
+/* Notificação de "Adicionado!" no Card */
+.product-card-notification {
+    position: absolute;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #28a745;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+    pointer-events: none;
+    z-index: 10;
+    white-space: nowrap;
+}
 
+.product-card-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10px);
+}
+
+
+/* --- HEADER --- */
+/* (Os estilos do Header estão no seu próprio arquivo, Header.css) */
 .user-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem; /* Cria um espaço de 16px ENTRE cada item */
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-/* Bônus: Um pequeno ajuste no link do carrinho para ele se alinhar melhor */
 .cart-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem; /* Espaço entre o ícone e o texto do carrinho */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
-  
-  /* Responsivo */
-  @media (max-width: 768px) {
-    header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .products-grid {
-      grid-template-columns: 1fr;
-      padding: 1rem;
-    }
-  
-    form {
-      margin: 1rem;
-      padding: 1rem;
-    }
-  }
-  table {
+
+
+/* --- TABELAS --- */
+table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 1rem;
-  }
-  
-  th, td {
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-  }
-  
-  @media (max-width: 768px) {
-    table {
-      display: block;
-      overflow-x: auto;
-    }
-  }
-    table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
 }
 
 th, td {
-  padding: 0.75rem;
-  border: 1px solid #ddd;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    text-align: left;
 }
 
+
+/* --- RESPONSIVIDADE GERAL --- */
 @media (max-width: 768px) {
-  table {
-    display: block;
-    overflow-x: auto;
-  }
+    .products-grid {
+        grid-template-columns: 1fr 1fr; /* Duas colunas em telas menores */
+        padding: 1rem;
+    }
+
+    form {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto; /* Permite rolar a tabela horizontalmente */
+    }
+}
+
+@media (max-width: 480px) {
+    .products-grid {
+        grid-template-columns: 1fr; /* Coluna única em celulares */
+    }
 }
