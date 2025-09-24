@@ -1,131 +1,109 @@
-import { useEffect, useState } from "react";
-import Header from "../components/Header";
-import { getSellerProducts, deleteProduct } from "../services/api";
-import useAuth from "../hooks/useAuth";
-import CreateProduct from "./CreateProduct";
-import '../components/my-products.css';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import { getSellerProducts, deleteProduct } from '../services/api';
+import useAuth from '../hooks/useAuth';
+import { Edit, Trash2, PlusSquare } from 'lucide-react';
 
 export default function MyProducts() {
-  useAuth();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingProduct, setEditingProduct] = useState(null);
-  
-  const fetchProducts = async () => {
-    try {
-      const data = await getSellerProducts();
-      setProducts(data);
-    } catch (err) {
-      console.error(err);
-      alert(err?.body?.message || "Erro de conexão com o servidor.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    useAuth({ role: 'seller' });
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+    const fetchProducts = async () => {
+        try {
+            const data = await getSellerProducts();
+            setProducts(data);
+        } catch (err) {
+            console.error(err);
+            setError("Erro ao carregar produtos.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleDelete = async (productId) => {
-    if (!window.confirm("Tem certeza que deseja deletar este produto?")) return;
-    try {
-      await deleteProduct(productId);
-      setProducts((prev) => prev.filter((p) => p.id !== productId));
-      alert("Produto deletado com sucesso!");
-    } catch (err) {
-      console.error("Erro ao deletar o produto:", err);
-      alert(err?.body?.error || "Ocorreu um erro ao tentar deletar o produto.");
-    }
-  };
-  
-  const handleEdit = (product) => {
-    setEditingProduct(product);
-  };
+    useEffect(() => {
+        fetchProducts();
+    }, []);
 
-  const handleCloseModal = () => {
-    setEditingProduct(null);
-    fetchProducts();
-  };
+    const handleDelete = async (productId) => {
+        if (!window.confirm("Tem certeza que deseja deletar este produto?")) return;
+        try {
+            await deleteProduct(productId);
+            setProducts(prev => prev.filter(p => p.id !== productId));
+            alert("Produto deletado com sucesso!");
+        } catch (err) {
+            console.error("Erro ao deletar o produto:", err);
+            alert(err?.body?.error || "Ocorreu um erro ao deletar.");
+        }
+    };
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
+    return (
+        <div className="page-container">
+            <Header />
+            <main className="content-wrap">
+                <div className="my-products-container">
+                    <div className="page-header">
+                        <h1>Meus Produtos</h1>
+                        <Link to="/register-product" className="btn-add-new">
+                            <PlusSquare size={20} />
+                            Adicionar Novo Produto
+                        </Link>
+                    </div>
 
-      <div className="w-full flex justify-center mt-10 px-4 sm:px-6 lg:px-8">
-        {/* Usando a nova classe CSS */}
-        <div className="my-products-wrapper">
-          {/* Título */}
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Painel do Vendedor</h2>
+                    {loading && <p>Carregando produtos...</p>}
+                    {error && <p className="error-message">{error}</p>}
 
-          {loading ? (
-            <p className="text-center text-gray-600">Carregando...</p>
-          ) : products.length === 0 ? (
-            <p className="text-center text-gray-600">
-              Você ainda não cadastrou produtos.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              {/* Usando as novas classes CSS */}
-              <table className="products-table">
-                <thead className="products-table-header">
-                  <tr>
-                    <th>Nome</th>
-                    <th>Preço</th>
-                    <th>Estoque</th>
-                    <th className="text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((p) => (
-                    <tr key={p.id} className="products-table-row">
-                      <td>{p.name}</td>
-                      <td>R$ {(p.priceCents / 100).toFixed(2)}</td>
-                      <td>{p.stock}</td>
-                      <td className="action-buttons-container">
-                        <button
-                          onClick={() => handleEdit(p)}
-                          className="edit-button"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(p.id)}
-                          className="delete-button"
-                        >
-                          Deletar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    {!loading && !error && (
+                        <div className="table-wrapper">
+                            <table className="products-table">
+                                <thead>
+                                    <tr>
+                                        <th>Imagem</th>
+                                        <th>Nome</th>
+                                        <th>Preço</th>
+                                        <th>Estoque</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {products.length > 0 ? (
+                                        products.map(product => (
+                                            <tr key={product.id}>
+                                                <td>
+                                                    <img 
+                                                        src={product.images?.[0]?.url || 'https://via.placeholder.com/150'} 
+                                                        alt={product.name} 
+                                                        className="product-thumbnail" 
+                                                    />
+                                                </td>
+                                                <td data-label="Nome">{product.name}</td>
+                                                <td data-label="Preço">R$ {(product.priceCents / 100).toFixed(2).replace('.', ',')}</td>
+                                                <td data-label="Estoque">{product.stock}</td>
+                                                <td data-label="Ações" className="actions-cell">
+                                                    <Link to={`/edit-product/${product.id}`} className="btn-action btn-edit">
+                                                        <Edit size={16} /> Editar
+                                                    </Link>
+                                                    <button onClick={() => handleDelete(product.id)} className="btn-action btn-delete">
+                                                        <Trash2 size={16} /> Deletar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="no-products-message">Você ainda não cadastrou nenhum produto.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </main>
+            <Footer />
         </div>
-      </div>
-      
-      {editingProduct && (
-        <Modal onClose={handleCloseModal}>
-          <CreateProduct productToEdit={editingProduct} onClose={handleCloseModal} />
-        </Modal>
-      )}
-    </div>
-  );
-}
-
-const Modal = ({ onClose, children }) => {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 relative max-h-[90vh] overflow-y-auto">
-        <button
-          className="absolute top-2 right-4 text-gray-500 hover:text-gray-800 text-2xl"
-          onClick={onClose}
-        >
-          &times;
-        </button>
-        {children}
-      </div>
-    </div>
-  );
+    );
 };

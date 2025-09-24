@@ -17,6 +17,8 @@ import MyProducts from "./pages/MyProducts";
 import RegisterProduct from "./pages/RegisterProduct";
 import Sales from "./pages/Sales";
 import Footer from "./components/Footer";
+import Sections from "./pages/Sections";   
+import Section from "./pages/Section";   
 
 // Componente "inteligente" que decide qual página inicial mostrar
 function MainPage() {
@@ -28,7 +30,6 @@ function MainPage() {
   
   return <Home />;
 }
-
 
 function App() {
   return (
@@ -44,6 +45,10 @@ function App() {
 
               {/* Rota principal que decide o que mostrar */}
               <Route path="/" element={<MainPage />} />
+
+              {/* 🔹 Novas rotas de seções */}
+              <Route path="/sections" element={<Sections />} />
+              <Route path="/section/:id" element={<Section />} />
 
               {/* --- Rotas Protegidas para Clientes --- */}
               <Route

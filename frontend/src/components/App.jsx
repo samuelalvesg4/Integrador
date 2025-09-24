@@ -1,11 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
-import Cart from "./pages/Cart";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Checkout from "./pages/Checkout";
-import ProductDetail from "./pages/ProductDetail";
-import CreateProduct from "./pages/CreateProduct";
+// ... (outros imports) ...
 import RegisterProduct from "./pages/RegisterProduct";
 import MyProducts from "./pages/MyProducts";
 import Sales from "./pages/Sales";
@@ -14,30 +10,16 @@ import { CartProvider } from './context/CartContext';
 function App() {
   return (
     <Router>
-      {/* O CartProvider deve envolver todas as rotas */}
       <CartProvider>
         <Routes>
           {/* Rotas públicas */}
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Home />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
+          {/* ... (outras rotas públicas) ... */}
 
-          {/* Rotas protegidas para clientes */}
+          {/* Rotas protegidas para Vendedores */}
           <Route
-            path="/cart"
-            element={
-              <ProtectedRoute>
-                <Cart />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/create-product" element={<CreateProduct />} />
-          
-
-          {/* Rotas protegidas apenas para Vendedores */}
-          <Route
-            path="/RegisterProduct"
+            path="/register-product" // <-- minúscula
             element={
               <ProtectedRoute role="seller">
                 <RegisterProduct />
@@ -45,7 +27,7 @@ function App() {
             }
           />
           <Route
-            path="/MyProducts"
+            path="/my-products" // <-- minúscula
             element={
               <ProtectedRoute role="seller">
                 <MyProducts />
@@ -53,7 +35,7 @@ function App() {
             }
           />
           <Route
-            path="/Sales"
+            path="/sales" // <-- minúscula
             element={
               <ProtectedRoute role="seller">
                 <Sales />

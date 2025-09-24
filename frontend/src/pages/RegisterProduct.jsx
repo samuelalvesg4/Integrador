@@ -1,144 +1,174 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { registerProduct, uploadImages } from '../services/api';
 import useAuth from '../hooks/useAuth';
 import imageCompression from 'browser-image-compression';
 
 const RegisterProduct = () => {
-    // Garante que o usuário logado é um vendedor
-    useAuth({ role: 'seller' });
+  useAuth({ role: 'seller' });
 
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [price, setPrice] = useState('');
-    const [stock, setStock] = useState('');
-    const [selectedFiles, setSelectedFiles] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    price: '',
+    stock: '',
+    category: '',
+  });
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-    const handleFileChange = async (e) => {
-        const files = Array.from(e.target.files);
-        const compressedFiles = [];
+  // Atualiza inputs de texto
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-        for (const file of files) {
-            const options = {
-                maxSizeMB: 1,
-                maxWidthOrHeight: 1920,
-                useWebWorker: true,
-            };
+  // Upload e compressão das imagens
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files || []);
 
-            try {
-                const compressedFile = await imageCompression(file, options);
-                compressedFiles.push(compressedFile);
-            } catch (error) {
-                console.error(error);
-            }
-        }
-        setSelectedFiles(compressedFiles);
-    };
+    if (files.length === 0) return;
 
-    const handleSubmit = async (e) => {
+    if (files.length + selectedFiles.length > 6) {
+      setError('Você pode enviar no máximo 6 imagens.');
+      return;
+    }
+
+    setError('');
+    const compressedFiles = [];
+    const previews = [];
+
+    for (const file of files) {
+      const options = { maxSizeMB: 1, maxWidthOrHeight: 1920, useWebWorker: true };
+      try {
+        const compressedFile = await imageCompression(file, options);
+        compressedFiles.push(compressedFile);
+        previews.push(URL.createObjectURL(compressedFile));
+      } catch (error) {
+        console.error("Erro ao comprimir imagem:", error);
+        setError('Erro ao processar uma imagem.');
+      }
+    }
+
+    setSelectedFiles((prev) => [...prev, ...compressedFiles]);
+    setImagePreviews((prev) => [...prev, ...previews]);
+  };
+
+  // Submissão do formulário
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (selectedFiles.length === 0) {
+      setError('Por favor, adicione pelo menos uma imagem.');
+      return;
+    }
+
     setLoading(true);
+    setError('');
 
     try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            alert('Sessão expirada. Por favor, faça login novamente.');
-            navigate('/login');
-            setLoading(false);
-            return;
-        }
+      const productData = {
+        ...formData,
+        price: parseFloat(formData.price) * 100, // preço em centavos
+        stock: parseInt(formData.stock, 10),
+      };
 
-        // 1. Cadastrar o produto primeiro para obter o ID
-        const productData = {
-            name,
-            description,
-            price: parseFloat(price) * 100,
-            stock: parseInt(stock, 10),
-            images: [], // Começa com um array vazio de imagens
-        };
+      const newProduct = await registerProduct(productData);
 
-        const newProduct = await registerProduct(productData);
-        const productId = newProduct.id; // Assume que o backend retorna o ID do novo produto
+      if (newProduct && newProduct.id) {
+        await uploadImages(newProduct.id, selectedFiles);
+      }
 
-        let imageUrls = [];
-
-        // 2. Fazer o upload das imagens usando o ID do produto recém-criado
-        if (selectedFiles.length > 0) {
-            const uploadResponse = await uploadImages(selectedFiles, productId);
-            imageUrls = uploadResponse.imageUrls; // Armazena as URLs retornadas
-        }
-
-        alert("Produto cadastrado e imagens enviadas com sucesso!");
-        navigate('/MyProducts');
-
+      alert("Produto cadastrado com sucesso!");
+      navigate('/my-products');
     } catch (error) {
-        console.error("Erro ao cadastrar produto:", error);
-        alert(`Erro ao cadastrar produto: ${error.body?.error || error.message}`);
+      console.error("Erro ao cadastrar produto:", error);
+      setError(error.body?.error || error.message || 'Erro ao cadastrar produto.');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
-    return (
-        <div className="min-h-screen bg-gray-100">
-            <Header />
-            <div className="w-full flex justify-center mt-10 px-4 sm:px-6 lg:px-8">
-                <div className="w-full max-w-lg bg-white rounded-lg shadow p-8">
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Cadastrar Produto</h2>
-                        <input
-                            type="text"
-                            placeholder="Nome do Produto"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            className="border p-2 rounded w-full"
-                        />
-                        <textarea
-                            placeholder="Descrição"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            required
-                            className="border p-2 rounded w-full"
-                        />
-                        <input
-                            type="number"
-                            step="0.01"
-                            placeholder="Preço (R$)"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            required
-                            className="border p-2 rounded w-full"
-                        />
-                        <input
-                            type="number"
-                            placeholder="Estoque"
-                            value={stock}
-                            onChange={(e) => setStock(e.target.value)}
-                            required
-                            className="border p-2 rounded w-full"
-                        />
-                        <input
-                            type="file"
-                            multiple
-                            onChange={handleFileChange}
-                            className="border p-2 rounded w-full"
-                        />
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-full w-full hover:bg-blue-700 transition duration-300"
-                        >
-                            {loading ? 'Cadastrando...' : 'Cadastrar Produto'}
-                        </button>
-                    </form>
+  return (
+    <div className="page-container">
+      <Header />
+      <main className="content-wrap">
+        <div className="form-container">
+          <div className="form-header">
+            <h1 className="form-title">Cadastrar Novo Produto</h1>
+            <p className="form-subtitle">Preencha os detalhes abaixo para adicionar um item à sua loja.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="product-form">
+            {error && <p className="error-message">{error}</p>}
+            <div className="form-grid">
+              <div className="form-group span-2">
+                <label htmlFor="name" className="form-label">Nome do Produto</label>
+                <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} className="form-input" required />
+              </div>
+
+              <div className="form-group span-2">
+                <label htmlFor="description" className="form-label">Descrição</label>
+                <textarea id="description" name="description" value={formData.description} onChange={handleChange} className="form-textarea" rows="4" required></textarea>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="price" className="form-label">Preço (R$)</label>
+                <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} className="form-input" placeholder="Ex: 25.99" step="0.01" required />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="stock" className="form-label">Estoque</label>
+                <input type="number" id="stock" name="stock" value={formData.stock} onChange={handleChange} className="form-input" placeholder="Ex: 100" required />
+              </div>
+
+              <div className="form-group span-2">
+                <label htmlFor="category" className="form-label">Categoria</label>
+                <select id="category" name="category" value={formData.category} onChange={handleChange} className="form-select" required>
+                  <option value="">Selecione uma categoria</option>
+                  <option value="bebidas">Bebidas</option>
+                  <option value="alimentos">Alimentos</option>
+                </select>
+              </div>
+
+              <div className="form-group span-2">
+                <label className="form-label">Imagens (até 6)</label>
+                <div className="file-input-container">
+                  <label htmlFor="images" className="file-input-label">Escolher Arquivos</label>
+                  <input
+                    type="file"
+                    id="images"
+                    onChange={handleFileChange}
+                    className="file-input"
+                    multiple
+                    accept="image/png, image/jpeg, image/webp"
+                  />
                 </div>
+              </div>
+
+              {imagePreviews.length > 0 && (
+                <div className="image-preview-container span-2">
+                  {imagePreviews.map((preview, index) => (
+                    <img key={index} src={preview} alt={`Pré-visualização ${index + 1}`} className="image-preview" />
+                  ))}
+                </div>
+              )}
             </div>
+
+            <div className="form-footer">
+              <button type="submit" className="submit-btn" disabled={loading}>
+                {loading ? 'Cadastrando...' : 'Cadastrar Produto'}
+              </button>
+            </div>
+          </form>
         </div>
-    );
+      </main>
+      <Footer />
+    </div>
+  );
 };
 
 export default RegisterProduct;

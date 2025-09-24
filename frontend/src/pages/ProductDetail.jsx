@@ -1,69 +1,105 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import { getProductById } from '../services/api';
+import { useCart } from '../context/CartContext'; // Importa o hook do carrinho
 
 export default function ProductDetail() {
     const { id } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const { addToCart } = useCart(); // Pega a função de adicionar ao carrinho
 
     useEffect(() => {
         const fetchProduct = async () => {
             try {
                 const data = await getProductById(id);
-                setProduct(data);
+                // Ajuste para o preço vir em reais, não em centavos
+                const productData = {
+                    ...data,
+                    price: data.priceCents / 100,
+                };
+                setProduct(productData);
             } catch (err) {
                 console.error("Erro ao buscar o produto", err);
+                setError("Produto não encontrado.");
             } finally {
                 setLoading(false);
             }
         };
-
         fetchProduct();
     }, [id]);
 
-    if (loading) {
-        return <p>Carregando detalhes do produto...</p>;
-    }
-
-    if (!product) {
-        return <p>Produto não encontrado.</p>;
-    }
-
     const handleAddToCart = () => {
-        alert("Adicionar ao carrinho!");
+        addToCart(product);
+        alert(`${product.name} foi adicionado ao carrinho!`);
     };
+    
+    if (loading) {
+        return (
+            <div className="page-container">
+                <Header />
+                <main className="content-wrap"><p style={{ textAlign: 'center', padding: '2rem' }}>Carregando produto...</p></main>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="page-container">
+                <Header />
+                <main className="content-wrap"><p style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>{error}</p></main>
+                <Footer />
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="page-container">
             <Header />
-            <div className="p-6">
-                <div className="bg-white p-6 rounded-lg shadow-md max-w-4xl mx-auto">
-                    {product.images && product.images.length > 0 && (
-                        <img src={`http://localhost:4000${product.images[0].url}`} alt={product.name} className="w-full h-80 object-cover rounded-md mb-4" />
-                    )}
-                    <h2 className="text-3xl font-bold">{product.name}</h2>
-                    <p className="text-gray-600 mt-2">Por: {product.seller?.user?.name || "Vendedor desconhecido"}</p>
-                    <p className="text-2xl font-bold text-blue-600 mt-4">R$ {product.price.toFixed(2)}</p>
-                    <p className="mt-4">{product.description}</p>
-                    <p className="text-gray-500 mt-2">Em estoque: {product.stock}</p>
+            <main className="content-wrap">
+                <div className="product-detail-container">
+                    <div className="product-detail-grid">
+                        {/* Coluna da Imagem */}
+                        <div className="product-gallery">
+                            <img 
+                                src={product.images?.[0]?.url || 'https://via.placeholder.com/400'} 
+                                alt={product.name} 
+                                className="main-product-image"
+                            />
+                        </div>
 
-                    <div className="mt-6 flex space-x-4">
-                        <button
-                            onClick={handleAddToCart}
-                            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
-                        >
-                            Adicionar ao Carrinho
-                        </button>
-                        <button
-                            className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 transition"
-                        >
-                            Comprar Agora
-                        </button>
+                        {/* Coluna de Informações */}
+                        <div className="product-info">
+                            <h1 className="product-name">{product.name}</h1>
+                            <p className="product-seller">Vendido por: {product.seller?.user?.name || "Vendedor desconhecido"}</p>
+                            <p className="product-price">R$ {product.price.toFixed(2).replace('.', ',')}</p>
+                            
+                            <div className="product-description">
+                                <h2>Descrição</h2>
+                                <p>{product.description}</p>
+                            </div>
+                            
+                            <p className="product-stock">
+                                {product.stock > 0 ? `${product.stock} unidades em estoque` : "Produto esgotado"}
+                            </p>
+
+                            <div className="product-actions">
+                                <button onClick={handleAddToCart} className="btn-add-to-cart" disabled={product.stock === 0}>
+                                    Adicionar ao Carrinho
+                                </button>
+                                <button className="btn-buy-now" disabled={product.stock === 0}>
+                                    Comprar Agora
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </main>
+            <Footer />
         </div>
     );
 }

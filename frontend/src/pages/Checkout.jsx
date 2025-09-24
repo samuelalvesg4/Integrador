@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 import { finalizarCompra } from '../services/api';
-import './checkout.css';
+
+// Importa o seu arquivo CSS específico para esta página
+import '../pages/checkout.css'; 
 
 export default function Checkout() {
     const navigate = useNavigate();
-    const { checkoutItems: cartItems, clearCart } = useCart();
+    const { checkoutItems, clearCart } = useCart();
     
+    // Estados do formulário e da página
     const [cep, setCep] = useState('');
     const [logradouro, setLogradouro] = useState('');
     const [bairro, setBairro] = useState('');
@@ -22,69 +26,52 @@ export default function Checkout() {
     const [checkoutStep, setCheckoutStep] = useState('details'); 
     const [paymentData, setPaymentData] = useState({});
 
-    const subtotal = cartItems.reduce((acc, item) => acc + (item.priceCents || item.price * 100) * item.quantity, 0);
+    const subtotal = checkoutItems.reduce((acc, item) => acc + (item.priceCents || item.price * 100) * item.quantity, 0);
 
     useEffect(() => {
-        if ((cartItems.length === 0) && (checkoutStep === 'details')) {
-            alert("Nenhum item selecionado para checkout. Redirecionando para o carrinho.");
+        if (checkoutItems.length === 0 && checkoutStep === 'details') {
+            alert("Nenhum item selecionado para checkout.");
             navigate('/cart');
         }
-    }, [cartItems, navigate, checkoutStep]);
+    }, [checkoutItems, navigate, checkoutStep]);
 
-    const generateRandomPixKey = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-
-    const generateFakeBoletoNumber = () => {
-        let number = '';
-        for (let i = 0; i < 48; i++) {
-            number += Math.floor(Math.random() * 10);
-            if ([4, 9, 14, 19, 24, 29, 34, 39, 43].includes(i)) number += ' ';
-        }
-        return number;
-    };
+    const formatPrice = (valueInCents) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valueInCents / 100);
 
     const handleCepChange = async (e) => {
-        const newCep = e.target.value.replace(/\D/g, '');
-        setCep(newCep);
-        if (newCep.length === 8) {
+        const value = e.target.value.replace(/\D/g, '');
+        setCep(value);
+        if (value.length === 8) {
             setLoadingCep(true);
             try {
-                const response = await fetch(`https://viacep.com.br/ws/${newCep}/json/`);
+                const response = await fetch(`https://viacep.com.br/ws/${value}/json/`);
                 const data = await response.json();
                 if (!data.erro) {
-                    setLogradouro(data.logradouro);
-                    setBairro(data.bairro);
-                    setCidade(data.localidade);
-                    setEstado(data.uf);
-                } else {
-                    alert('CEP não encontrado.');
+                    setLogradouro(data.logradouro || '');
+                    setBairro(data.bairro || '');
+                    setCidade(data.localidade || '');
+                    setEstado(data.uf || '');
                 }
-            } catch (error) {
-                console.error('Erro ao buscar CEP:', error);
-            } finally {
-                setLoadingCep(false);
-            }
+            } catch (err) { console.error("Erro ao buscar CEP", err); }
+            finally { setLoadingCep(false); }
         }
     };
-    
+
     const handleProceedToPayment = (e) => {
         e.preventDefault();
         if ((!logradouro || !numero) || !paymentMethod) {
-            alert('Por favor, preencha o endereço completo e escolha uma forma de pagamento.');
-            return;
+            return alert('Por favor, preencha o endereço completo e escolha uma forma de pagamento.');
         }
-        if (paymentMethod === 'Pix') setPaymentData({ pixKey: generateRandomPixKey() });
-        else if (paymentMethod === 'Boleto') setPaymentData({ boletoNumber: generateFakeBoletoNumber() });
+        if (paymentMethod === 'Pix') setPaymentData({ pixKey: '00020126330014br.gov.bcb.pix011112345678901' });
+        else if (paymentMethod === 'Boleto') setPaymentData({ boletoNumber: '12345.67890 12345.678901 12345.678901 1 12345678901234' });
+        
         setCheckoutStep('payment');
     };
 
     const handleConfirmPayment = async () => {
         const orderData = {
-            items: cartItems.map(item => ({ id: item.id, quantity: item.quantity })),
+            items: checkoutItems.map(item => ({ productId: item.id, quantity: item.quantity })),
             totalCents: subtotal,
-            paymentMethod: paymentMethod,
+            paymentMethod,
         };
         try {
             await finalizarCompra(orderData);
@@ -98,61 +85,56 @@ export default function Checkout() {
     };
     
     return (
-        <div>
+        <div className="page-container">
             <Header />
-            <main className="checkout-page">
-                <h1>Finalizar Compra</h1>
+            <main className="content-wrap checkout-page">
+                <h1>{checkoutStep === 'details' ? 'Finalizar Compra' : 'Realize o Pagamento'}</h1>
 
                 {checkoutStep === 'details' ? (
-                    // CORRIGIDO: Este contêiner agora usa grid para alinhar os 3 passos
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 checkout-container">
-                        <section className="checkout-section">
-                            <form onSubmit={handleProceedToPayment} id="checkoutForm">
+                    <div className="checkout-container">
+                        <div className="address-payment-forms">
+                            <section className="checkout-section">
                                 <h2>Endereço de Entrega</h2>
-                                <div className="address-form-grid">
+                                <form id="checkoutForm" onSubmit={handleProceedToPayment} className="address-form-grid">
                                     <div className="form-group"><label>CEP</label><input type="text" value={cep} onChange={handleCepChange} required disabled={loadingCep} /></div>
                                     <div className="form-group"><label>Rua</label><input type="text" value={logradouro} onChange={(e) => setLogradouro(e.target.value)} required /></div>
                                     <div className="form-group"><label>Bairro</label><input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} required /></div>
                                     <div className="form-group"><label>Cidade</label><input type="text" value={cidade} onChange={(e) => setCidade(e.target.value)} required /></div>
                                     <div className="form-group"><label>Estado</label><input type="text" value={estado} onChange={(e) => setEstado(e.target.value)} required /></div>
                                     <div className="form-group"><label>Número</label><input type="text" value={numero} onChange={(e) => setNumero(e.target.value)} required /></div>
-                                    <div className="form-group full-width"><label>Complemento</label><input type="text" value={complemento} onChange={(e) => setComplemento(e.target.value)} /></div>
+                                    <div className="form-group full-width"><label>Complemento (Opcional)</label><input type="text" value={complemento} onChange={(e) => setComplemento(e.target.value)} /></div>
+                                </form>
+                            </section>
+                            
+                            <section className="checkout-section">
+                                <h2>Forma de Pagamento</h2>
+                                <div className="payment-options">
+                                    <label className="payment-option"><input type="radio" name="payment" value="Pix" checked={paymentMethod === 'Pix'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Pix</span></label>
+                                    <label className="payment-option"><input type="radio" name="payment" value="Cartão" checked={paymentMethod === 'Cartão'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Cartão de Crédito</span></label>
+                                    <label className="payment-option"><input type="radio" name="payment" value="Boleto" checked={paymentMethod === 'Boleto'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Boleto Bancário</span></label>
                                 </div>
-                                <div className="mt-4">
-                                    <button type="submit" className="bg-green-600 text-white px-6 py-3 rounded-full w-full font-bold hover:bg-green-700">
-                                        Prosseguir para Pagamento
-                                    </button>
-                                </div>
-                            </form>
-                        </section>
+                            </section>
+                        </div>
                         
-                        <section className="checkout-section">
-                            <h2>Forma de Pagamento</h2>
-                            <div className="payment-options">
-                                <label className="payment-option"><input type="radio" name="payment" value="Pix" checked={paymentMethod === 'Pix'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Pix</span></label>
-                                <label className="payment-option"><input type="radio" name="payment" value="Cartão" checked={paymentMethod === 'Cartão'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Cartão de Crédito</span></label>
-                                <label className="payment-option"><input type="radio" name="payment" value="Boleto" checked={paymentMethod === 'Boleto'} onChange={(e) => setPaymentMethod(e.target.value)} /><span>Boleto Bancário</span></label>
-                            </div>
-                        </section>
-
                         <aside className="order-summary checkout-section">
                             <h2>Resumo do Pedido</h2>
-                            {cartItems.map((item) => (
+                            {checkoutItems.map((item) => (
                                 <div key={item.id} className="summary-item">
                                     <span>{item.name} (x{item.quantity})</span>
-                                    <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format((item.priceCents || item.price * 100) * item.quantity / 100)}</span>
+                                    <span>{formatPrice((item.priceCents || item.price * 100) * item.quantity)}</span>
                                 </div>
                             ))}
                             <div className="summary-total">
                                 <span>Total:</span>
-                                <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotal / 100)}</span>
+                                <span>{formatPrice(subtotal)}</span>
                             </div>
+                            <button type="submit" form="checkoutForm" className="btn btn-primary">
+                                Prosseguir para Pagamento
+                            </button>
                         </aside>
                     </div>
                 ) : (
                     <section className="checkout-section payment-simulation-box">
-                        <h2>Realize o Pagamento</h2>
-                        
                         {paymentMethod === 'Pix' && (
                             <div>
                                 <h3>Pagamento com Pix</h3>
@@ -161,35 +143,28 @@ export default function Checkout() {
                                 <img src="https://i.imgur.com/gsv936s.png" alt="Exemplo de QR Code" className="payment-image qr-code" />
                             </div>
                         )}
-
+                        {/* Simulações para Boleto e Cartão */}
                         {paymentMethod === 'Boleto' && (
-                            <div>
+                           <div>
                                 <h3>Pagamento com Boleto</h3>
                                 <p>Use o código abaixo para pagar o boleto:</p>
                                 <div className="payment-code">{paymentData.boletoNumber}</div>
                                 <img src="https://i.imgur.com/qDc4s4s.png" alt="Exemplo de Código de Barras" className="payment-image barcode" />
-                            </div>
+                           </div>
                         )}
-
                         {paymentMethod === 'Cartão' && (
                             <div>
                                 <h3>Pagamento com Cartão de Crédito</h3>
-                                <p>Preencha os dados abaixo. (Não use dados reais).</p>
-                                <div className="address-form-grid" style={{marginTop: '1.5rem'}}>
-                                    <div className="form-group full-width"><input type="text" placeholder="Número do Cartão (ex: 4242 4242 4242 4242)" /></div>
-                                    <div className="form-group full-width"><input type="text" placeholder="Nome no Cartão" /></div>
-                                    <div className="form-group"><input type="text" placeholder="Validade (MM/AA)" /></div>
-                                    <div className="form-group"><input type="text" placeholder="CVV" /></div>
-                                </div>
+                                <p>Esta é apenas uma simulação. Clique em 'Finalizar Pedido' para confirmar.</p>
                             </div>
                         )}
-                        
-                        <button onClick={handleConfirmPayment} className="btn btn-confirm" style={{marginTop: '2rem'}}>
-                            Já realizei o pagamento
+                        <button onClick={handleConfirmPayment} className="btn btn-confirm">
+                            Já Paguei, Finalizar Pedido
                         </button>
                     </section>
                 )}
             </main>
+            <Footer />
         </div>
     );
 }

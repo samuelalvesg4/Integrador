@@ -1,86 +1,102 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import { register } from "../services/api"; // O caminho de importação foi corrigido
+import { Link, useNavigate } from "react-router-dom";
+import { register } from "../services/api"; // <-- 1. IMPORTAMOS a função do nosso arquivo central
+import Logo from '../components/logosemd.png';
 
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("customer");
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // 2. VEJA COMO A FUNÇÃO FICOU MAIS SIMPLES
   const handleRegister = async (e) => {
     e.preventDefault();
-
+    setError('');
     try {
-      const data = await register(name, email, password, role);
-
-      localStorage.setItem("user", JSON.stringify({
-        id: data.userId,
-        name: name,
-        email: email,
-        role: role
-      }));
-
-      window.dispatchEvent(new Event("userChanged"));
-
-      alert("Cadastro realizado com sucesso!");
-      navigate("/");
+      // Apenas chamamos a função 'register' e passamos os dados.
+      // Toda a lógica de fetch, URL, headers, etc. está escondida no api.js!
+      await register(name, email, password, role);
+      
+      alert("Cadastro realizado com sucesso! Faça o login para continuar.");
+      navigate("/login");
     } catch (err) {
       console.error(err);
-      alert(err.body?.message || "Erro de conexão com o servidor.");
+      setError(err.body?.message || "Não foi possível criar a conta. Tente outro e-mail.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
-      <div className="flex justify-center items-center h-[80vh]">
-        <form
-          onSubmit={handleRegister}
-          className="bg-white p-6 rounded-2xl shadow-md w-96"
-        >
-          <h2 className="text-xl font-bold mb-4">Cadastro</h2>
-          <input
-            type="text"
-            placeholder="Nome"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 border rounded mb-3"
-            required
-          />
-          <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded mb-3"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded mb-3"
-            required
-          />
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full p-2 border rounded mb-3"
-          >
-            <option value="customer">Cliente</option>
-            <option value="seller">Vendedor</option>
-          </select>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-          >
-            Cadastrar
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="logo-container">
+          <Link to="/">
+            <img src={Logo} alt="Logo SEMD" />
+          </Link>
+        </div>
+        <h2 className="auth-title">
+          Criar Nova Conta
+        </h2>
+
+        <form onSubmit={handleRegister}>
+          {error && <p className="error-message">{error}</p>}
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="name">Nome Completo</label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="email">E-mail</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="password">Senha</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="role">Eu quero</label>
+            <select
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="form-select"
+            >
+              <option value="customer">Comprar</option>
+              <option value="seller">Vender</option>
+            </select>
+          </div>
+          <button type="submit" className="submit-btn">
+            Criar Conta
           </button>
         </form>
+
+        <p className="auth-switch-link">
+          Já tem uma conta?{' '}
+          <Link to="/login">Faça login</Link>
+        </p>
       </div>
     </div>
   );
