@@ -1,0 +1,47 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Ajusta as colunas automaticamente */
+    gap: 10px;
+    width: 90%;
+    max-width: 1200px;
+    padding: 10px;
+    background-color: transparent;
+    border-radius: 8px;
+    box-shadow: none;
+    margin: 0 auto;
+}
+
+.grid-item {
+    background-color: #fff;
+    color: black;
+    font-size: 1.2em;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    
+    /* Adicionado para um efeito suave */
+    transition: all 0.3s ease-in-out;
+}
+
+/* Efeito de hover */
+.grid-item:hover {
+    transform: scale(1.02); /* Aumenta o tamanho em 2% */
+    box-shadow: 0 12px 20px rgba(255, 136, 0, 0.5); /* Aumenta a sombra */
+    cursor: pointer;
+}
+
+.no-products {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+    .grid-container {
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-container {
+    }
+}

@@ -1,0 +1,203 @@
+
+.checkout-page {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.checkout-page h1 {
+    color: #2B0B00;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.checkout-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+/* Estilos para os "cards" brancos */
+.checkout-section {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+/* Formulário de Endereço */
+.address-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 0.5rem;
+    max-width: auto;
+}
+
+.address-form {
+    display:contents;
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    margin-bottom: 0.1rem;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+/* Opções de Pagamento (Rádios) */
+.payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.payment-option {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.payment-option:hover {
+    border-color: #FF851E;
+    background-color: #fffaf5;
+}
+
+.payment-option input[type="radio"] {
+    margin-right: 1rem;
+    accent-color: #FF851E; /* Estiliza a bolinha do radio */
+}
+
+/* Resumo do Pedido */
+.order-summary .summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+.order-summary .summary-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #2B0B00;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+/* Botões */
+.btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: #FF851E;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #e07215;
+}
+
+.btn-confirm {
+    background-color: #28a745; /* Verde para confirmação */
+    color: #fff;
+}
+
+.btn-confirm:hover {
+    background-color: #218838;
+}
+
+/* Etapa 2: Simulação de Pagamento */
+.payment-simulation-box {
+    text-align: center;
+}
+
+.payment-simulation-box h3 {
+    color: #2B0B00;
+}
+
+.payment-code {
+    background-color: #f8f8f8;
+    padding: 1rem;
+    border-radius: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    word-break: break-all;
+    margin: 1rem 0;
+    border: 1px dashed #ccc;
+}
+
+.payment-image {
+    margin: 1.5rem auto;
+    max-width: 100%;
+}
+
+.qr-code {
+    width: 200px;
+    height: 200px;
+}
+
+.barcode {
+    max-width: 400px;
+}
+
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 900px) {
+    .checkout-container {
+        grid-template-columns: 1fr;
+    }
+
+    /* Inverte a ordem no mobile para mostrar o resumo primeiro */
+    .address-payment-forms {
+       order: 2;
+    }
+    .order-summary {
+       order: 1;
+    }
+}
+
+@media (max-width: 500px) {
+    .address-form-grid {
+        grid-template-columns: 1fr;
+    }
+    .checkout-section {
+        padding: 1.5rem;
+    }
+    .checkout-page h1 {
+        font-size: 1.5rem;
+    }
+}
