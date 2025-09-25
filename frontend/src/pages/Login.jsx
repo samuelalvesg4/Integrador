@@ -1,9 +1,11 @@
 // frontend/src/pages/Login.jsx
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { login } from "../services/api";
+import Logo from '../components/logosemd.png';
+import '../index.css';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -38,37 +40,53 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
-      <div className="flex justify-center items-center h-[80vh]">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded-2xl shadow-md w-96"
-        >
-          <h2 className="text-xl font-bold mb-4">Login</h2>
-          {error && <p className="text-red-500 mb-3">{error}</p>}
-          <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded mb-3"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded mb-3"
-            required
-          />
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-          >
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="logo-container">
+          <Link to="/">
+            <img src={Logo} alt="Logo SEMD" />
+          </Link>
+        </div>
+        <h2 className="auth-title">
+          Acesse sua Conta
+        </h2>
+
+        <form onSubmit={handleSubmit}>
+          {error && <p className="error-message">{error}</p>}
+          
+          <div className="form-group">
+            <label className="form-label" htmlFor="email">E-mail</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="password">Senha</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          <button type="submit" className="submit-btn">
             Entrar
           </button>
         </form>
+
+        <p className="auth-switch-link">
+          Não tem uma conta?{' '}
+          <Link to="/register">Cadastre-se</Link>
+        </p>
       </div>
+    </div>
     </div>
   );
 }
