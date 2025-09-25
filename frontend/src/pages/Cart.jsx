@@ -87,10 +87,21 @@ export default function Cart() {
                                         </div>
                                         <span>{formatPrice(item.priceCents || item.price * 100)}</span>
                                         <div className="quantity-controls">
-                                            <button onClick={() => updateItemQuantity(item.id, -1)} disabled={item.quantity <= 1}>-</button>
-                                            <span>{item.quantity}</span>
-                                            <button onClick={() => updateItemQuantity(item.id, 1)}>+</button>
-                                        </div>
+    <button 
+        className="quantity-btn" 
+        onClick={() => updateItemQuantity(item.id, -1)} 
+        disabled={item.quantity <= 1}
+    >
+        -
+    </button>
+    <span className="quantity-display">{item.quantity}</span>
+    <button 
+        className="quantity-btn" 
+        onClick={() => updateItemQuantity(item.id, 1)}
+    >
+        +
+    </button>
+</div>
                                         <span className="item-total-price">{formatPrice((item.priceCents || item.price * 100) * item.quantity)}</span>
                                           <div style={{display: 'flex', justifyContent: 'center'}}>
                                           <button onClick={() => removeItemFromCart(item.id)} className="remove-button"><Trash2 size={20} /></button>

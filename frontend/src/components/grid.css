@@ -23,6 +23,29 @@
     
     /* Adicionado para um efeito suave */
     transition: all 0.3s ease-in-out;
+
+    display: flex;          /* Ativa o Flexbox */
+    flex-direction: column;
+}
+
+.card-content {
+    padding: 20px;
+    text-align: center;
+    flex-grow: 1; 
+}
+
+.grid-item h3 {
+    font-size: 1.2em;
+    margin-bottom: 0.75rem; /* Espaçamento abaixo do título */
+    height: 3.6em;         /* Altura fixa para 2 linhas, garantindo estabilidade */
+    line-height: 1.8em;    /* Espaçamento entre as linhas do título */
+    
+    /* --- O "Escondedor de Texto" --- */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2; /* Limita a 2 linhas */
+    line-clamp: 2;         /* Versão padrão para o futuro */
 }
 
 /* Efeito de hover */
@@ -36,7 +59,7 @@
     grid-column: 1 / -1;
 }
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
     .grid-container {
     }
 }
@@ -44,4 +67,4 @@
 @media (max-width: 480px) {
     .grid-container {
     }
-}
+} */

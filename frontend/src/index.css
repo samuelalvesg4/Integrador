@@ -132,6 +132,25 @@ form input, form textarea {
     white-space: nowrap;
 }
 
+.product-card h3 { 
+  font-size: 1.1rem; 
+  font-weight: bold; 
+  text-align: left;
+  margin-bottom: 0.5rem;
+  
+  /* Garante uma altura fixa para 2 linhas, estabilizando o layout */
+  /* Ajuste este valor se mudar o font-size ou line-height */
+  height: 2.7rem; 
+  line-height: 1.35rem;
+
+  /* --- O "Escondedor de Texto" --- */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; 
+  line-clamp: 2; /* Adiciona a versão padrão para o futuro */
+}
+
 .product-card-notification.show {
     opacity: 1;
     transform: translateX(-50%) translateY(-10px);
@@ -169,10 +188,13 @@ th, td {
 
 /* --- RESPONSIVIDADE GERAL --- */
 @media (max-width: 768px) {
-    .products-grid {
-        grid-template-columns: 1fr 1fr; /* Duas colunas em telas menores */
-        padding: 1rem;
-    }
+    .products-grid { 
+    display: grid; 
+    /* Cria colunas responsivas que têm no mínimo 240px */
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+    gap: 1.5rem; /* Espaçamento entre os cards */
+    padding: 1rem;
+}
 
     form {
         margin: 1rem;
@@ -432,6 +454,18 @@ th, td {
     text-align: center;
     margin-top: 0.5rem;
   }
+
+  .mobile-nav .btn-login {
+  color: #FF851E; /* Garante que o texto do Login seja Laranja */
+  border-color: #FF851E;
+  text-align: center; /* Centraliza o texto */
+}
+
+.mobile-nav .btn-register {
+  color: #2B0B00; /* FORÇA o texto do Cadastro a ser Marrom Escuro */
+  background-color: #FF851E;
+  text-align: center; /* Centraliza o texto */
+}
   
   .mobile-logout-button {
     background: none;
