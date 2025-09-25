@@ -1,26 +1,83 @@
-.search-bar {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    max-width: 500px;
-    margin: 20px auto;
-    padding: 8px 12px;
-    border-radius: 25px;
-    background-color: #f2f2f2;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+/* ======================================================= */
+/* ESTILOS DA BARRA DE PESQUISA (ESTRATÉGIA DE PORCENTAGEM) */
+/* ======================================================= */
+
+/* Container principal para centralização */
+.search-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+  padding: 0 1rem; /* Essencial para dar um respiro nas laterais */
+  width: 100%;
+}
+
+/* A barra de pesquisa em si (controla a largura) */
+.search-container {
+  position: relative;
+  /* MUDANÇA PRINCIPAL: Agora a largura é uma porcentagem da tela */
+  width: 60%; /* Começa com 60% em telas bem grandes */
+  /* Adicionamos um max-width como um "teto" para não ficar gigante em monitores ultrawide */
+  max-width: 900px; 
+  transition: width 0.3s ease-in-out; /* A transição agora é na largura */
+}
+
+/* O campo de input */
+.search-input {
+  display: block;
+  width: 100%;
+  border-radius: 9999px; 
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+  padding: 0.8rem 1rem;
+  padding-right: 3rem; 
+  font-size: 1rem;
+  color: #4b5563;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Efeito visual quando o input está focado */
+.search-input:focus {
+  border-color: #FF851E;
+  box-shadow: 0 0 0 3px rgba(255, 133, 30, 0.2);
+}
+
+/* O ícone de lupa */
+.search-icon {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  height: 1.25rem;
+  width: 1.25rem;
+  color: #6b7280;
+}
+
+/* ======================================================== */
+/* MEDIA QUERIES COM FOCO EM PORCENTAGEM                    */
+/* ======================================================== */
+
+/* Para telas de desktop um pouco menores */
+@media (max-width: 1400px) {
+  .search-container {
+    width: 70%; /* Aumenta a proporção para 70% */
   }
-  
-  .search-bar input {
-    flex: 1;
-    border: none;
-    outline: none;
-    padding: 8px 12px;
-    border-radius: 25px;
-    background-color: transparent;
-    font-size: 16px;
+}
+
+
+/* Para tablets e laptops menores */
+@media (max-width: 992px) {
+  .search-container {
+    width: 85%; /* Ocupa uma parte ainda mais considerável */
   }
-  
-  .search-icon {
-    margin-right: 8px;
-    color: #888;
+}
+
+/* Para celulares */
+@media (max-width: 768px) {
+  .search-container {
+    width: 95%; /* Quase 100%, ideal para mobile */
   }
+  .search-wrapper {
+    margin: 1rem 0; 
+  }
+}

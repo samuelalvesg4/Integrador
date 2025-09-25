@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { ShoppingCart } from 'lucide-react';
 
 // Adicione este CSS no final do seu index.css ou crie um ProductCard.css
 const notificationStyles = `
@@ -28,8 +29,8 @@ const notificationStyles = `
 `;
 
 export default function ProductCard({ product }) {
-    const { addToCart } = useCart();
-    
+    const { addToCart, cartItems } = useCart()
+
     // --- NOVO ESTADO PARA CONTROLAR A NOTIFICAÇÃO ---
     const [showNotification, setShowNotification] = useState(false);
 
@@ -59,8 +60,13 @@ export default function ProductCard({ product }) {
         currency: 'BRL',
     }).format(product.priceCents / 100 || 0); // Use priceCents
 
-    // Verifica se o produto está sem estoque
-    const isOutOfStock = product.stock <= 0;
+    // Encontra o item específico no carrinho
+    const itemInCart = cartItems.find(item => item.id === product.id);
+    // Pega a quantidade que já está no carrinho, ou 0 se não estiver
+    const quantityInCart = itemInCart ? itemInCart.quantity : 0;
+
+    // ALTERADO: A nova lógica para verificar se está esgotado
+    const isOutOfStock = product.stock <= 0 || quantityInCart >= product.stock;
 
     return (
         <div>
@@ -77,26 +83,30 @@ export default function ProductCard({ product }) {
                         </div>
                     )}
                 </Link>
-                
+
                 <div className="p-4">
                     <h3 className="text-lg font-semibold truncate">{product.name}</h3>
                     <p className="text-gray-600 mt-1 font-bold">{formattedPrice}</p>
-                    
+
                     <div className="flex justify-between items-center mt-4">
                         <div>
                             <button
-                                // A função agora é a nossa nova 'handleAddToCart'
                                 onClick={handleAddToCart}
-                                // --- MUDANÇA PRINCIPAL: DESABILITA O BOTÃO SE ESTIVER FORA DE ESTOQUE ---
                                 disabled={isOutOfStock}
-                                // Muda a cor e o texto do botão se estiver esgotado
-                                className={`text-white text-sm px-3 py-1 rounded transition ${
-                                    isOutOfStock 
-                                        ? 'bg-gray-400 cursor-not-allowed' 
-                                        : 'bg-green-600 hover:bg-green-700'
-                                }`}
+                                // NOVO: Classes de estilo para um botão mais moderno
+                                className={`product-bt 
+        flex items-center justify-center w-full gap-2 px-4 py-2 font-bold text-white transition-all duration-200 rounded-lg shadow-md
+        ${isOutOfStock
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        : 'bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-75 transform hover:-translate-y-0.5'
+                                    }
+    `}
                             >
-                                {isOutOfStock ? 'Esgotado' : 'Adicionar ao Carrinho'}
+                                {/* NOVO: Adiciona um ícone ao lado do texto */}
+                                {!isOutOfStock && <ShoppingCart size={16} />}
+                                <span>
+                                    {isOutOfStock ? 'Esgotado' : 'Adicionar'}
+                                </span>
                             </button>
                         </div>
                     </div>

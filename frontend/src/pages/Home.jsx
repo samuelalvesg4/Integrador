@@ -55,7 +55,7 @@ const Home = () => {
                         ))}
                     </div>
                 ) : filteredProducts.length > 0 ? (
-                    <div className="grid-container">
+                    <div className="products-grid">
                         {productsToDisplay.map((product) => (
                             <div key={product.id} className="grid-item">
                                 <ProductCard product={product} />

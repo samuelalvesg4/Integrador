@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { ShoppingCart, ChevronDown } from "lucide-react";
+// NOVO: Adicione o ícone 'Menu' para o hambúrguer
+import { ShoppingCart, ChevronDown, Menu } from "lucide-react"; 
 import { useCart } from '../context/CartContext';
 import useUser from '../hooks/useUser';
 import Logo from './logosemd.png';
@@ -11,6 +12,9 @@ export default function Header() {
   const { cartItems } = useCart();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // NOVO: Estado para controlar a visibilidade do menu responsivo
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Lógica para fechar o dropdown se o usuário clicar fora dele
   useEffect(() => {
@@ -25,11 +29,35 @@ export default function Header() {
     };
   }, [dropdownRef]);
 
+  // useEffect para fechar o menu mobile ao redimensionar a tela para desktop
+   useEffect(() => {
+    const handleResize = () => {
+      // Usamos o mesmo breakpoint do nosso CSS (768px)
+      if (window.innerWidth > 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    // Adiciona o "ouvinte" de evento quando o componente é montado
+    window.addEventListener('resize', handleResize);
+
+    // IMPORTANTE: Remove o "ouvinte" quando o componente é desmontado para evitar vazamento de memória
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  
+  // NOVO: Função para fechar o menu móvel ao navegar
+  const handleMobileLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     window.dispatchEvent(new Event("userChanged"));
     setIsDropdownOpen(false);
+    setIsMobileMenuOpen(false); // Fecha o menu mobile também
     navigate("/login");
   };
 
@@ -41,64 +69,107 @@ export default function Header() {
   const isSeller = user?.role === "seller";
   const isCustomer = user?.role === "customer" || user?.role === "client";
 
+  // NOVO: Envolvemos o retorno em um container para o header e o menu mobile
   return (
-    <header className="header">
-      {/* GRUPO DA ESQUERDA: Logo, Bebidas, Alimentos */}
-      <div className="header-left">
-        <Link to="/" className="header-logo">
-          <img src={Logo} alt="Logo da Loja" />
-        </Link>
-        <nav className="header-nav">
-          <NavLink to="/section/bebidas">Bebidas</NavLink>
-          <NavLink to="/section/alimentos">Alimentos</NavLink>
-        </nav>
-      </div>
+    <div className="header-container">
+      <header className="header">
+        {/* GRUPO DA ESQUERDA: Logo, Bebidas, Alimentos */}
+        <div className="header-left">
+          <Link to="/" className="header-logo">
+            <img src={Logo} alt="Logo da Loja" />
+          </Link>
+          <nav className="header-nav">
+            <NavLink to="/section/bebidas">Bebidas</NavLink>
+            <NavLink to="/section/alimentos">Alimentos</NavLink>
+          </nav>
+        </div>
 
-      {/* GRUPO DA DIREITA: Ações do Usuário */}
-      <div className="header-right">
-        {isLoggedIn ? (
-          // Se o usuário está LOGADO
-          <>
-            {isCustomer && (
-              <Link to="/cart" className="cart-icon">
-                <ShoppingCart size={24} />
-                {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
-              </Link>
-            )}
-            
-            <div className="user-dropdown-container" ref={dropdownRef}>
-              <button className="user-dropdown-trigger" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-                Olá, {user.name}
-                <ChevronDown size={20} className={`chevron-icon ${isDropdownOpen ? 'open' : ''}`} />
-              </button>
-
-              {isDropdownOpen && (
-                <div className="user-dropdown-menu">
-                  {isSeller && (
-                    <>
-                      <Link to="/seller-dashboard" className="dropdown-item">Meu Painel</Link>
-                      <Link to="/register-product" className="dropdown-item">Anunciar Produto</Link>
-                      <Link to="/my-products" className="dropdown-item">Meus Produtos</Link>
-                      <Link to="/sales" className="dropdown-item">Minhas Vendas</Link>
-                    </>
-                  )}
-                  {isCustomer && (
-                    <Link to="/customer-dashboard" className="dropdown-item">Meus Pedidos</Link>
-                  )}
-                  <div className="dropdown-divider"></div>
-                  <button onClick={handleLogout} className="dropdown-item logout">Sair</button>
-                </div>
+        {/* GRUPO DA DIREITA: Ações do Usuário */}
+        <div className="header-right">
+          {isLoggedIn ? (
+            // Se o usuário está LOGADO (versão desktop)
+            <>
+              {isCustomer && (
+                <Link to="/cart" className="cart-icon">
+                  <ShoppingCart size={24} />
+                  {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
+                </Link>
               )}
+              
+              <div className="user-dropdown-container" ref={dropdownRef}>
+                <button className="user-dropdown-trigger" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+                  Olá, {user.name}
+                  <ChevronDown size={20} className={`chevron-icon ${isDropdownOpen ? 'open' : ''}`} />
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="user-dropdown-menu">
+                    {/* ... (itens do dropdown - sem alterações aqui) ... */}
+                     {isSeller && (
+                       <>
+                         <Link to="/seller-dashboard" className="dropdown-item">Meu Painel</Link>
+                         <Link to="/register-product" className="dropdown-item">Anunciar Produto</Link>
+                         <Link to="/my-products" className="dropdown-item">Meus Produtos</Link>
+                         <Link to="/sales" className="dropdown-item">Minhas Vendas</Link>
+                       </>
+                     )}
+                     {isCustomer && (
+                       <Link to="/customer-dashboard" className="dropdown-item">Meus Pedidos</Link>
+                     )}
+                     <div className="dropdown-divider"></div>
+                     <button onClick={handleLogout} className="dropdown-item logout">Sair</button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            // Se o usuário está DESLOGADO (versão desktop)
+            <div className="header-auth-buttons">
+              <Link to="/login" className="btn btn-login">Login</Link>
+              <Link to="/register" className="btn btn-register">Cadastro</Link>
             </div>
-          </>
-        ) : (
-          // Se o usuário está DESLOGADO
-          <>
-            <Link to="/login" className="btn btn-login">Login</Link>
-            <Link to="/register" className="btn btn-register">Cadastro</Link>
-          </>
-        )}
-      </div>
-    </header>
+          )}
+          
+          {/* NOVO: Ícone de Hambúrguer para mobile */}
+          <button className="hamburger-menu" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <Menu size={28} />
+          </button>
+        </div>
+      </header>
+      
+      {/* NOVO: Menu Navegação Mobile (aparece abaixo do header) */}
+      {isMobileMenuOpen && (
+        <nav className="mobile-nav">
+          {/* Links de Navegação Principal */}
+          <NavLink to="/section/bebidas" onClick={handleMobileLinkClick}>Bebidas</NavLink>
+          <NavLink to="/section/alimentos" onClick={handleMobileLinkClick}>Alimentos</NavLink>
+          
+          <div className="mobile-nav-divider"></div>
+
+          {/* Lógica de Usuário para Mobile */}
+          {isLoggedIn ? (
+            <>
+              {isSeller && (
+                <>
+                  <Link to="/seller-dashboard" onClick={handleMobileLinkClick}>Meu Painel</Link>
+                  <Link to="/register-product" onClick={handleMobileLinkClick}>Anunciar Produto</Link>
+                  <Link to="/my-products" onClick={handleMobileLinkClick}>Meus Produtos</Link>
+                  <Link to="/sales" onClick={handleMobileLinkClick}>Minhas Vendas</Link>
+                </>
+              )}
+              {isCustomer && (
+                 <Link to="/customer-dashboard" onClick={handleMobileLinkClick}>Meus Pedidos</Link>
+              )}
+              <button onClick={handleLogout} className="mobile-logout-button">Sair</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="btn btn-login" onClick={handleMobileLinkClick}>Login</Link>
+              <Link to="/register" className="btn btn-register" onClick={handleMobileLinkClick}>Cadastro</Link>
+            </>
+          )}
+        </nav>
+      )}
+    </div>
   );
 }

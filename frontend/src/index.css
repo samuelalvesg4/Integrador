@@ -175,6 +175,126 @@ body {
   font-weight: bold; 
 }
 
+/* ========================================= */
+/* ESTILOS PARA O MENU RESPONSIVO (MOBILE)   */
+/* ========================================= */
+
+/* Container para o header para garantir que ele permaneça no topo */
+.header-container {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Ícone do Hambúrguer (escondido por padrão no desktop) */
+.hamburger-menu {
+  display: none; /* Escondido em telas grandes */
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* O menu de navegação mobile */
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+  background-color: #3a1a0e; /* Um pouco mais claro que o header */
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.mobile-nav a,
+.mobile-nav button {
+  color: #FF851E;
+  text-decoration: none;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  text-align: left;
+}
+
+.mobile-nav a:hover,
+.mobile-nav button:hover {
+  background-color: rgba(255, 133, 30, 0.1);
+  color: #fff;
+}
+
+.mobile-nav .btn {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.mobile-logout-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #e74c3c !important; /* Cor de logout */
+}
+
+.mobile-nav-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 0.8rem 0;
+}
+
+
+/* Agrupador para os botões de login/cadastro no desktop */
+.header-auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* ============================================================= */
+/* MEDIA QUERY: Ponto de quebra para telas menores (ex: 768px)   */
+/* ============================================================= */
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0.8rem 1rem; /* Menor padding em telas pequenas */
+  }
+
+  /* 1. Esconde a navegação principal do desktop */
+  .header-nav {
+    display: none;
+  }
+  
+  /* 2. Esconde o dropdown de usuário e os botões de login/cadastro do desktop */
+  .user-dropdown-container,
+  .header-auth-buttons {
+    display: none;
+  }
+
+  /* 3. Mostra o ícone de hambúrguer */
+  .hamburger-menu {
+    display: block; /* Mostra o ícone em telas pequenas */
+  }
+
+  .header-left, .header-right {
+    gap: 1rem; /* Reduz o espaçamento */
+  }
+
+  .header-container {
+    position: static;
+  }
+}
+
 
 /* ============================== */
 /* SEÇÕES DE PRODUTOS             */
@@ -266,6 +386,25 @@ body {
   color: #2B0B00; 
   text-align: left; 
 }
+
+.product-bt{
+  width: calc(100% - 2rem); 
+  margin: 0 1rem 1rem 1rem; 
+  background-color: #FF851E; 
+  border: none; 
+  padding: 0.8rem; 
+  color: white; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-size: 1rem; 
+  font-weight: bold; 
+  transition: background-color 0.3s; 
+  margin-top: auto; 
+}
+.product-bt:hover{
+  background-color: #e07215;
+}
+
 .product-card button { 
   width: calc(100% - 2rem); 
   margin: 0 1rem 1rem 1rem; 

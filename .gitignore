@@ -1,18 +1,35 @@
-# Dependências
-node_modules/
+# Arquivo .gitignore para a raiz do projeto (integrador/)
 
-# Cache
-.cache/
+# Ignora todas as pastas de dependências, em qualquer lugar do projeto
+node_modules
+.pnp
+.pnp.js
 
-# Logs
+# Ignora todos os diretórios de cache
+.cache
+
+# Ignora arquivos de log, em qualquer lugar
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Ambiente
+# Ignora arquivos de ambiente (nunca comite chaves de API!)
 .env
-.env.local
+.env.*
+!.env.example
 
-# Build
-dist/
-build/
+# Ignora pastas de build/distribuição, em qualquer lugar
+dist
+build
+out
+.next
+
+# Arquivos de IDEs e editores
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
