@@ -178,7 +178,7 @@ export default function Checkout() {
                                             <h3>Pagamento com Pix</h3>
                                             <p>Copie a chave Pix abaixo para realizar o pagamento:</p>
                                             <div className="payment-code">{generateRandomPixKey()}</div>
-                                            <img src="https://i.imgur.com/gsv936s.png" alt="Exemplo de QR Code" className="payment-image qr-code" />
+                                            {/* {<img src="https://i.imgur.com/gsv936s.png" alt="Exemplo de QR Code" className="payment-image qr-code" />} */}
                                         </div>
                                     )}
                                 </div>
@@ -189,7 +189,7 @@ export default function Checkout() {
                                             <h3>Pagamento com Boleto</h3>
                                             <p>Use o código abaixo para pagar o boleto:</p>
                                             <div className="payment-code">{generateFakeBoletoNumber()}</div>
-                                            <img src="https://i.imgur.com/qDc4s4s.png" alt="Exemplo de Código de Barras" className="payment-image barcode" />
+                                            {/* {<img src="https://i.imgur.com/qDc4s4s.png" alt="Exemplo de Código de Barras" className="payment-image barcode" />} */}
                                         </div>
                                     )}
                                 </div>

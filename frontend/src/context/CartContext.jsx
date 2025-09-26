@@ -85,13 +85,35 @@ export const CartProvider = ({ children }) => {
     };
 
     // ... (função updateItemQuantity sem alteração)
-    const updateItemQuantity = (id, delta) => {
-        setCartItems((prevItems) => {
-            return prevItems.map((item) =>
-                item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-            );
-        });
-    };
+    const updateItemQuantity = (productId, amount) => {
+    setCartItems(prevItems => {
+        const itemToUpdate = prevItems.find(item => item.id === productId);
+
+        if (!itemToUpdate) {
+            return prevItems; // Retorna os itens sem alteração se não encontrar
+        }
+        
+        const newQuantity = itemToUpdate.quantity + amount;
+
+        // VERIFICAÇÃO DE ESTOQUE
+        if (newQuantity > itemToUpdate.stock) {
+            alert(`Você não pode adicionar mais de ${itemToUpdate.stock} unidades deste item.`);
+            return prevItems; // Retorna os itens sem alteração
+        }
+
+        // Garante que a quantidade não seja menor que 1
+        if (newQuantity < 1) {
+            return prevItems;
+        }
+
+        // Se a nova quantidade for válida, atualiza
+        return prevItems.map(item =>
+            item.id === productId
+                ? { ...item, quantity: newQuantity }
+                : item
+        );
+    });
+};
 
 
     const value = {

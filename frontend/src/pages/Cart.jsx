@@ -3,17 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { useCart } from '../context/CartContext';
 import { Trash2 } from "lucide-react";
-import '../components/cart.css'; 
+import '../components/cart.css';
 
 export default function Cart() {
-    const { 
-        cartItems, 
-        updateItemQuantity, 
+    const {
+        cartItems,
+        updateItemQuantity,
         removeItemFromCart,
         selectedItems,
         toggleItemSelection,
         toggleSelectAll,
-        startCheckout 
+        startCheckout
     } = useCart();
 
     const [cep, setCep] = useState("");
@@ -24,7 +24,7 @@ export default function Cart() {
     const subtotal = selectedCartItems.reduce((acc, item) => acc + (item.priceCents || item.price * 100) * item.quantity, 0);
 
     const formatPrice = (priceCents) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(priceCents / 100);
-    
+
     const calcularFrete = () => {
         // Lógica de cálculo de frete
         if (cep.length !== 8) {
@@ -37,7 +37,7 @@ export default function Cart() {
         const custoPorItem = 500; // R$ 5,00
         const novoFrete = custoBaseFrete + (selectedCartItems.length * custoPorItem);
         setFrete(novoFrete);
-        };
+    };
 
     const handleFinalizarCompra = () => {
         if (selectedCartItems.length === 0) {
@@ -74,9 +74,9 @@ export default function Cart() {
                                         <label htmlFor="selectAll">Produto</label>
                                     </div>
                                     <div>Preço Unit.</div>
-                                    <div style={{textAlign: 'center'}}>Qtd.</div>
+                                    <div style={{ textAlign: 'center' }}>Qtd.</div>
                                     <div>Preço Total</div>
-                                    <div style={{textAlign: 'center'}}>Remover</div>
+                                    <div style={{ textAlign: 'center' }}>Remover</div>
                                 </div>
                                 {cartItems.map(item => (
                                     <div key={item.id} className="cart-item">
@@ -87,24 +87,27 @@ export default function Cart() {
                                         </div>
                                         <span>{formatPrice(item.priceCents || item.price * 100)}</span>
                                         <div className="quantity-controls">
-    <button 
-        className="quantity-btn" 
-        onClick={() => updateItemQuantity(item.id, -1)} 
-        disabled={item.quantity <= 1}
-    >
-        -
-    </button>
-    <span className="quantity-display">{item.quantity}</span>
-    <button 
-        className="quantity-btn" 
-        onClick={() => updateItemQuantity(item.id, 1)}
-    >
-        +
-    </button>
-</div>
+                                            <button
+                                                className="quantity-btn"
+                                                onClick={() => updateItemQuantity(item.id, -1)}
+                                                disabled={item.quantity <= 1}
+                                            >
+                                                -
+                                            </button>
+                                            <span className="quantity-display">{item.quantity}</span>
+                                            <button
+                                                className="quantity-btn"
+                                                onClick={() => updateItemQuantity(item.id, 1)}
+                                                // 👇 ADIÇÃO IMPORTANTE: Desabilita o botão se a quantidade no carrinho
+                                                //    já for igual ou maior que o estoque do produto.
+                                                disabled={item.quantity >= item.stock}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
                                         <span className="item-total-price">{formatPrice((item.priceCents || item.price * 100) * item.quantity)}</span>
-                                          <div style={{display: 'flex', justifyContent: 'center'}}>
-                                          <button onClick={() => removeItemFromCart(item.id)} className="remove-button"><Trash2 size={20} /></button>
+                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                            <button onClick={() => removeItemFromCart(item.id)} className="remove-button"><Trash2 size={20} /></button>
                                         </div>
                                     </div>
                                 ))}
